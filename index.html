@@ -951,236 +951,175 @@ function showSummary() {
 // ═══════════════════════════════════════════
 // REPORT HTML GENERATION
 // ═══════════════════════════════════════════
-function buildReport() {
-  const storeName  = document.getElementById('f-storeName').value || 'Your Store';
-  const storeAddr  = document.getElementById('f-storeAddr').value || '';
-  const storeType  = document.getElementById('f-storeType').value || '';
-  const mgrName    = document.getElementById('f-mgr').value || 'Store Manager';
-  const repName    = document.getElementById('f-rep').value || 'Your Industroclean Representative';
-  const dt         = document.getElementById('f-date').value;
+function buildEmail() {
+  const storeName = document.getElementById('f-storeName').value || 'Your Store';
+  const storeAddr = document.getElementById('f-storeAddr').value || '';
+  const storeType = document.getElementById('f-storeType').value || '';
+  const mgrName   = document.getElementById('f-mgr').value || 'Store Manager';
+  const repName   = document.getElementById('f-rep').value || 'Industroclean Representative';
+  const dt        = document.getElementById('f-date').value;
 
-  const answered = Object.values(answers);
+  const answered  = Object.values(answers);
   const passCount = answered.filter(a => a.answer).length;
   const failCount = answered.filter(a => !a.answer).length;
-  const tot = answered.length;
-  const pct = tot > 0 ? Math.round(passCount / tot * 100) : 0;
+  const tot       = answered.length;
+  const pct       = tot > 0 ? Math.round(passCount / tot * 100) : 0;
+  const col       = pct >= 80 ? '#1B7A3E' : pct >= 60 ? '#B45309' : '#991B1B';
+  const rlbl      = pct >= 85 ? 'LOW RISK' : pct >= 65 ? 'MODERATE RISK' : 'HIGH RISK';
+  const rbg       = pct >= 85 ? '#EAF7EF' : pct >= 65 ? '#FEF3C7' : '#FEF2F2';
 
-  const col  = pct >= 80 ? '#1B7A3E' : pct >= 60 ? '#B45309' : '#991B1B';
-  const rlbl = pct >= 85 ? 'LOW RISK' : pct >= 65 ? 'MODERATE RISK' : 'HIGH RISK';
-  const rbg  = pct >= 85 ? '#EAF7EF' : pct >= 65 ? '#FEF3C7' : '#FEF2F2';
-
-  // Failures grouped by section
+  // Failures by section
   const failsBySec = {};
   SECTIONS.forEach((_,i) => failsBySec[i] = []);
   allQs.forEach(qd => {
     const r = answers[qd.id];
-    if (r && !r.answer) failsBySec[qd.si].push({ qd, notes: r.notes });
+    if (r && !r.answer) failsBySec[qd.si].push(qd);
   });
 
-  let failsHTML = '';
+  let failHTML = '';
   SECTIONS.forEach((sec, si) => {
     const items = failsBySec[si];
     if (!items.length) return;
-    failsHTML += `
-    <div style="margin-bottom:32px;">
-      <div style="background:#E8611A;color:#fff;padding:11px 18px;border-radius:8px 8px 0 0;font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;">
-        Section ${sec.letter} — ${sec.title}
-      </div>
-      ${items.map(({ qd, notes }) => `
-      <div style="border:1px solid #E5E7EB;border-top:none;background:#fff;">
-        <div style="padding:18px 18px 0 18px;">
-          <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;">
-            <span style="font-size:16px;flex-shrink:0;">❌</span>
-            <div style="font-size:14px;font-weight:700;color:#0F1F3D;line-height:1.4;">${qd.q}</div>
-          </div>
-          <div style="background:#F9FAFB;border-radius:6px;padding:10px 12px;margin-bottom:12px;">
-            <div style="font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#9CA3AF;margin-bottom:4px;">Regulation Reference</div>
-            <div style="font-size:12px;color:#E8611A;font-weight:600;">${qd.ref}</div>
-          </div>
-          <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#9CA3AF;margin-bottom:6px;">What This Means for Your Store</div>
-          <div style="font-size:13px;color:#374151;line-height:1.7;margin-bottom:14px;">${qd.failExp}</div>
-          <div style="background:#FEF3EC;border-left:4px solid #E8611A;padding:12px 14px;border-radius:0 8px 8px 0;margin-bottom:${notes ? '10px' : '18px'};">
-            <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#E8611A;margin-bottom:5px;">How Industroclean Can Help</div>
-            <div style="font-size:13px;color:#4A2500;line-height:1.65;">${qd.remedy}</div>
-          </div>
-          ${notes ? `<div style="font-size:11px;color:#9CA3AF;font-style:italic;padding-bottom:14px;">Auditor note: ${notes}</div>` : ''}
+    failHTML += `<div style="margin-bottom:24px;">
+      <div style="background:#E8611A;color:#fff;padding:9px 16px;border-radius:6px 6px 0 0;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;">Section ${sec.letter} — ${sec.title}</div>`;
+    items.forEach(qd => {
+      const note = answers[qd.id] && answers[qd.id].notes ? answers[qd.id].notes : '';
+      failHTML += `<div style="border:1px solid #E5E7EB;border-top:none;background:#fff;padding:16px;">
+        <div style="font-size:13px;font-weight:700;color:#0F1F3D;margin-bottom:8px;">❌ ${qd.q}</div>
+        <div style="background:#F9FAFB;border-radius:4px;padding:7px 10px;margin-bottom:10px;font-size:11px;color:#E8611A;font-weight:600;">${qd.ref}</div>
+        <div style="font-size:12px;color:#374151;line-height:1.65;margin-bottom:10px;">${qd.failExp}</div>
+        <div style="background:#FEF3EC;border-left:3px solid #E8611A;padding:10px 12px;border-radius:0 6px 6px 0;font-size:12px;color:#4A2500;line-height:1.6;">
+          <strong style="display:block;color:#E8611A;font-size:10px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">How Industroclean Can Help</strong>
+          ${qd.remedy}
         </div>
-      </div>`).join('')}
-    </div>`;
+        ${note ? `<div style="margin-top:8px;font-size:11px;color:#9CA3AF;font-style:italic;">Auditor note: ${note}</div>` : ''}
+      </div>`;
+    });
+    failHTML += '</div>';
   });
 
-  // Passes
+  // Passes — just a compact list
   const passItems = allQs.filter(q => answers[q.id] && answers[q.id].answer);
-  const passesHTML = passItems.length > 0 ? `
-    <div style="margin-bottom:32px;">
-      <div style="background:#1B7A3E;color:#fff;padding:11px 18px;border-radius:8px 8px 0 0;font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;">
-        Compliant Items — ${passItems.length} Passed
-      </div>
-      ${passItems.map(qd => `
-      <div style="border:1px solid #E5E7EB;border-top:none;background:#fff;padding:12px 18px;display:flex;gap:10px;align-items:flex-start;">
-        <span style="font-size:14px;flex-shrink:0;">✅</span>
-        <div style="font-size:13px;color:#374151;line-height:1.4;">${qd.q}</div>
-      </div>`).join('')}
+  const passHTML = passItems.length ? `
+    <div style="margin-bottom:24px;">
+      <div style="background:#1B7A3E;color:#fff;padding:9px 16px;border-radius:6px 6px 0 0;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;">Compliant Items — ${passItems.length} Passed</div>
+      ${passItems.map(qd => `<div style="border:1px solid #E5E7EB;border-top:none;background:#fff;padding:10px 14px;font-size:12px;color:#374151;">✅ ${qd.q}</div>`).join('')}
     </div>` : '';
 
-  // Section scores table
-  const secScores = SECTIONS.map((sec, si) => {
-    const secQs = allQs.filter(q => q.si === si && answers[q.id]);
-    const sp = secQs.filter(q => answers[q.id].answer).length;
-    const st2 = secQs.length;
-    if (!st2) return '';
-    const sp2 = Math.round(sp / st2 * 100);
-    const sc = sp2 >= 80 ? '#1B7A3E' : sp2 >= 60 ? '#B45309' : '#991B1B';
-    return `<tr><td style="padding:7px 0;font-size:13px;color:#374151;border-bottom:1px solid #F3F4F6;">Section ${sec.letter}: ${sec.title}</td><td style="padding:7px 0;text-align:right;font-size:13px;font-weight:700;color:${sc};border-bottom:1px solid #F3F4F6;">${sp}/${st2} (${sp2}%)</td></tr>`;
+  // Section score rows
+  const secRows = SECTIONS.map((sec, si) => {
+    const sqs = allQs.filter(q => q.si === si && answers[q.id]);
+    const sp = sqs.filter(q => answers[q.id].answer).length;
+    if (!sqs.length) return '';
+    const pp = Math.round(sp / sqs.length * 100);
+    const sc = pp >= 80 ? '#1B7A3E' : pp >= 60 ? '#B45309' : '#991B1B';
+    return `<tr><td style="padding:7px 0;font-size:12px;color:#374151;border-bottom:1px solid #F3F4F6;">Section ${sec.letter}: ${sec.title}</td><td style="padding:7px 0;text-align:right;font-size:12px;font-weight:700;color:${sc};border-bottom:1px solid #F3F4F6;">${sp}/${sqs.length} (${pp}%)</td></tr>`;
   }).join('');
 
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Compliance Audit Report — ${storeName}</title>
-</head>
-<body style="margin:0;padding:0;background:#F3F4F6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#1C1C1C;">
-<div style="max-width:680px;margin:0 auto;background:#fff;">
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Compliance Report — ${storeName}</title></head>
+<body style="margin:0;padding:0;background:#F3F4F6;font-family:Arial,Helvetica,sans-serif;color:#1C1C1C;">
+<div style="max-width:620px;margin:0 auto;background:#fff;">
 
-  <!-- HEADER -->
-  <div style="background:#0F1F3D;padding:32px 28px 26px;">
-    <div style="display:flex;align-items:center;gap:14px;margin-bottom:22px;">
-      <div style="width:46px;height:46px;background:#E8611A;border-radius:10px;text-align:center;line-height:46px;font-size:16px;font-weight:900;color:#fff;flex-shrink:0;">IC</div>
-      <div>
-        <div style="color:#fff;font-size:16px;font-weight:800;letter-spacing:0.04em;">INDUSTROCLEAN (PTY) LTD</div>
-        <div style="color:rgba(255,255,255,0.45);font-size:11px;letter-spacing:0.08em;text-transform:uppercase;margin-top:2px;">In-Store Hygiene &amp; Compliance Audit Report</div>
-      </div>
-    </div>
-    <div style="border-top:1px solid rgba(255,255,255,0.1);padding-top:18px;">
-      <div style="color:#fff;font-size:22px;font-weight:800;margin-bottom:4px;">${storeName}</div>
-      ${storeAddr ? `<div style="color:rgba(255,255,255,0.5);font-size:12px;">${storeAddr}</div>` : ''}
-      <div style="color:rgba(255,255,255,0.4);font-size:12px;margin-top:2px;">${storeType} | Audit Date: ${fmtDate(dt)} | Auditor: ${repName}</div>
+<div style="background:#0F1F3D;padding:28px 24px 22px;">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+    <div style="width:42px;height:42px;background:#E8611A;border-radius:8px;text-align:center;line-height:42px;font-size:15px;font-weight:900;color:#fff;flex-shrink:0;">IC</div>
+    <div>
+      <div style="color:#fff;font-size:15px;font-weight:800;">INDUSTROCLEAN (PTY) LTD</div>
+      <div style="color:rgba(255,255,255,0.45);font-size:10px;letter-spacing:.08em;text-transform:uppercase;">In-Store Hygiene &amp; Compliance Audit Report</div>
     </div>
   </div>
-
-  <!-- SCORE -->
-  <div style="background:${rbg};border-bottom:3px solid ${col};padding:22px 28px;">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
-      <div>
-        <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:${col};margin-bottom:4px;">Overall Compliance Score</div>
-        <div style="font-size:40px;font-weight:900;color:${col};line-height:1;">${pct}%</div>
-        <div style="font-size:12px;color:${col};margin-top:4px;">${passCount} of ${tot} requirements met</div>
-      </div>
-      <div style="text-align:right;">
-        <div style="display:inline-block;background:${col};color:#fff;padding:6px 14px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.08em;">${rlbl}</div>
-        <div style="font-size:12px;color:${col};margin-top:8px;">${failCount} items require action</div>
-      </div>
-    </div>
-    <div style="margin-top:14px;height:6px;background:rgba(0,0,0,0.1);border-radius:3px;overflow:hidden;">
-      <div style="height:100%;width:${pct}%;background:${col};border-radius:3px;"></div>
-    </div>
+  <div style="border-top:1px solid rgba(255,255,255,0.1);padding-top:16px;">
+    <div style="color:#fff;font-size:20px;font-weight:800;margin-bottom:3px;">${storeName}</div>
+    ${storeAddr ? `<div style="color:rgba(255,255,255,0.5);font-size:11px;">${storeAddr}</div>` : ''}
+    <div style="color:rgba(255,255,255,0.4);font-size:11px;margin-top:2px;">${storeType} | ${fmtDate(dt)} | Audited by: ${repName}</div>
   </div>
-
-  <!-- INTRO -->
-  <div style="padding:26px 28px;border-bottom:1px solid #F3F4F6;">
-    <p style="font-size:14px;color:#374151;line-height:1.7;margin:0 0 14px 0;">Dear ${mgrName},</p>
-    <p style="font-size:13px;color:#374151;line-height:1.7;margin:0 0 14px 0;">
-      Thank you for allowing us to conduct an in-store hygiene and compliance walkthrough at <strong>${storeName}</strong> on <strong>${fmtDate(dt)}</strong>. This report summarises our findings against the key requirements of South African food safety legislation and internationally recognised food safety standards.
-    </p>
-    <p style="font-size:13px;color:#374151;line-height:1.7;margin:0 0 14px 0;">
-      The audit covered requirements under <strong>Government Gazette Regulation R638</strong> (General Hygiene Requirements for Food Premises, Foodstuffs, Cosmetics and Disinfectants Act 54 of 1972), the <strong>HACCP standard (SANS 10330:2007)</strong>, <strong>ISO 22000:2018</strong> and <strong>FSSC 22000 Version 6</strong>.
-    </p>
-    <p style="font-size:13px;color:#4A5568;line-height:1.7;margin:0;padding:14px 16px;background:#FEF3EC;border-left:4px solid #E8611A;border-radius:0 8px 8px 0;">
-      <strong>A note on compliance:</strong> The Certificate of Acceptability required to legally operate your food premises under R638 is granted — and can be withdrawn — by your local authority. The cost of compliance with the requirements in this report is always significantly less than the cost of a suspension, a product recall, or the liability that follows a food safety incident. We are here to help you close these gaps.
-    </p>
-  </div>
-
-  <!-- SECTION SCORES -->
-  <div style="padding:20px 28px;background:#F9FAFB;border-bottom:1px solid #E5E7EB;">
-    <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#9CA3AF;margin-bottom:14px;">Score by Section</div>
-    <table style="width:100%;border-collapse:collapse;">${secScores}</table>
-  </div>
-
-  <!-- FAILURES -->
-  <div style="padding:24px 28px 0;">
-    ${failCount > 0 ? `
-    <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#9CA3AF;margin-bottom:18px;">⚠️ Items Requiring Action (${failCount})</div>
-    ${failsHTML}` : `
-    <div style="background:#EAF7EF;border:1px solid #A8D5B5;border-radius:8px;padding:20px;text-align:center;margin-bottom:24px;">
-      <div style="font-size:24px;margin-bottom:8px;">🎉</div>
-      <div style="font-size:15px;font-weight:700;color:#1B7A3E;margin-bottom:4px;">All Checked Items Are Compliant</div>
-      <div style="font-size:12px;color:#4A7A5A;">Excellent compliance posture. Maintain current standards and keep records up to date.</div>
-    </div>`}
-  </div>
-
-  <!-- PASSES -->
-  <div style="padding:0 28px 24px;">${passesHTML}</div>
-
-  <!-- LEGISLATION -->
-  <div style="margin:0 28px 28px;border:1px solid #E5E7EB;border-radius:8px;overflow:hidden;">
-    <div style="background:#0F1F3D;padding:12px 16px;">
-      <div style="font-size:11px;font-weight:700;color:#fff;letter-spacing:0.05em;text-transform:uppercase;">Key South African Legislation &amp; Standards Referenced</div>
-    </div>
-    <table style="width:100%;border-collapse:collapse;font-size:12px;">
-      <tr style="border-bottom:1px solid #F3F4F6;"><td style="padding:9px 14px;width:35%;vertical-align:top;"><strong style="color:#0F1F3D;font-size:12px;">R638 (GN 638, 2018)</strong></td><td style="padding:9px 14px;color:#6B7280;line-height:1.55;">General Hygiene Requirements for Food Premises and Transport of Food, under the Foodstuffs, Cosmetics and Disinfectants Act 54 of 1972. Published by the Department of Health, 22 June 2018. This is the primary South African food premises law — compliance is mandatory for all food businesses.</td></tr>
-      <tr style="border-bottom:1px solid #F3F4F6;background:#FAFAFA;"><td style="padding:9px 14px;vertical-align:top;"><strong style="color:#0F1F3D;font-size:12px;">SANS 10330:2007</strong></td><td style="padding:9px 14px;color:#6B7280;line-height:1.55;">South African National Standard — Requirements for a Hazard Analysis and Critical Control Point (HACCP) system. Governs the development, implementation and maintenance of HACCP as a preventative food safety control system. The standard is built on 7 principles and 12 implementation stages.</td></tr>
-      <tr style="border-bottom:1px solid #F3F4F6;"><td style="padding:9px 14px;vertical-align:top;"><strong style="color:#0F1F3D;font-size:12px;">ISO 22000:2018</strong></td><td style="padding:9px 14px;color:#6B7280;line-height:1.55;">Food Safety Management Systems — International standard for any organisation in the food chain. Integrates HACCP principles with a comprehensive management system covering PRPs, traceability, emergency preparedness and continual improvement. The basis for FSSC 22000 certification.</td></tr>
-      <tr style="border-bottom:1px solid #F3F4F6;background:#FAFAFA;"><td style="padding:9px 14px;vertical-align:top;"><strong style="color:#0F1F3D;font-size:12px;">SANS 1828 / SANS 1853</strong></td><td style="padding:9px 14px;color:#6B7280;line-height:1.55;">SANS 1828: Certification for food-safe cleaning products (detergents). SANS 1853: Certification for disinfectants and sanitisers. All chemicals used on food contact surfaces in South African food premises must carry one or both certifications — these numbers must appear on the product label.</td></tr>
-      <tr style="border-bottom:1px solid #F3F4F6;"><td style="padding:9px 14px;vertical-align:top;"><strong style="color:#0F1F3D;font-size:12px;">OHSA (Act 85 of 1993)</strong></td><td style="padding:9px 14px;color:#6B7280;line-height:1.55;">Occupational Health and Safety Act. Governs employer responsibilities for workplace safety including provision of PPE, control of hazardous substances, SDS availability and safe working conditions. Applies to all employees including cleaning staff handling chemical products.</td></tr>
-      <tr><td style="padding:9px 14px;vertical-align:top;background:#FAFAFA;"><strong style="color:#0F1F3D;font-size:12px;">FSSC 22000 V6</strong></td><td style="padding:9px 14px;color:#6B7280;line-height:1.55;background:#FAFAFA;">Food Safety System Certification scheme recognised by the Global Food Safety Initiative (GFSI). Version 6 introduced enhanced requirements for allergen management (Clause 2.5.6), food safety culture, quality control and foreign body detection. Increasingly required as a condition of supply by major food retail chains.</td></tr>
-    </table>
-  </div>
-
-  <!-- CONTACT -->
-  <div style="margin:0 28px 28px;background:#0F1F3D;border-radius:8px;padding:20px 22px;">
-    <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:6px;">Ready to Close These Gaps?</div>
-    <div style="font-size:12px;color:rgba(255,255,255,0.65);line-height:1.6;margin-bottom:14px;">Contact your Industroclean representative to discuss any of the findings in this report. We can provide products, training, hygiene files and compliance support to address every item identified above — in a single visit.</div>
-    <div style="font-size:12px;color:rgba(255,255,255,0.9);line-height:1.8;">
-      <strong style="color:#E8611A;">Industroclean (Pty) Ltd</strong><br>
-      Corner Picaroon &amp; Raft Str, Laser Park, Honeydew, 2170<br>
-      Tel: (011) 801 4600 | Reg: 1973/001077/07
-    </div>
-  </div>
-
-  <!-- FOOTER -->
-  <div style="padding:16px 28px 24px;border-top:3px solid #E8611A;text-align:center;">
-    <div style="font-size:10px;color:#9CA3AF;line-height:1.6;">This report is provided as a complimentary compliance advisory service by Industroclean (Pty) Ltd. It does not constitute a formal legal opinion and does not replace engagement with the relevant local authority, Department of Health or a qualified food safety consultant. Report generated: ${fmtDate(dt)}.</div>
-  </div>
-
 </div>
-</body>
-</html>`;
+
+<div style="background:${rbg};border-bottom:3px solid ${col};padding:20px 24px;">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+    <div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:${col};margin-bottom:3px;">Overall Compliance Score</div>
+      <div style="font-size:38px;font-weight:900;color:${col};line-height:1;">${pct}%</div>
+      <div style="font-size:11px;color:${col};margin-top:3px;">${passCount} of ${tot} requirements met</div>
+    </div>
+    <div style="text-align:right;">
+      <div style="display:inline-block;background:${col};color:#fff;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.08em;">${rlbl}</div>
+      <div style="font-size:11px;color:${col};margin-top:6px;">${failCount} items require action</div>
+    </div>
+  </div>
+  <div style="margin-top:12px;height:5px;background:rgba(0,0,0,0.1);border-radius:3px;overflow:hidden;">
+    <div style="height:100%;width:${pct}%;background:${col};border-radius:3px;"></div>
+  </div>
+</div>
+
+<div style="padding:22px 24px;border-bottom:1px solid #F3F4F6;">
+  <p style="font-size:13px;color:#374151;line-height:1.7;margin:0 0 12px;">Dear ${mgrName},</p>
+  <p style="font-size:13px;color:#374151;line-height:1.7;margin:0 0 12px;">Thank you for allowing us to conduct an in-store compliance walkthrough at <strong>${storeName}</strong> on <strong>${fmtDate(dt)}</strong>. This report summarises our findings against the requirements of South African food safety law and internationally recognised food safety standards.</p>
+  <p style="font-size:12px;color:#4A5568;line-height:1.65;margin:0;padding:12px 14px;background:#FEF3EC;border-left:3px solid #E8611A;border-radius:0 6px 6px 0;">The cost of compliance is always less than the cost of a suspension, a product recall, or the liability that follows a food safety incident. We are here to help you close these gaps.</p>
+</div>
+
+<div style="padding:18px 24px;background:#F9FAFB;border-bottom:1px solid #E5E7EB;">
+  <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#9CA3AF;margin-bottom:12px;">Score by Section</div>
+  <table style="width:100%;border-collapse:collapse;">${secRows}</table>
+</div>
+
+<div style="padding:20px 24px 0;">
+  ${failCount > 0 ? `<div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#9CA3AF;margin-bottom:16px;">⚠️ Items Requiring Action (${failCount})</div>${failHTML}` :
+  `<div style="background:#EAF7EF;border:1px solid #A8D5B5;border-radius:8px;padding:18px;text-align:center;margin-bottom:20px;">
+    <div style="font-size:20px;margin-bottom:6px;">🎉</div>
+    <div style="font-size:14px;font-weight:700;color:#1B7A3E;">All Checked Items Are Compliant</div>
+  </div>`}
+</div>
+
+<div style="padding:0 24px 20px;">${passHTML}</div>
+
+<div style="margin:0 24px 24px;border:1px solid #E5E7EB;border-radius:8px;overflow:hidden;">
+  <div style="background:#0F1F3D;padding:10px 14px;font-size:10px;font-weight:700;color:#fff;letter-spacing:.06em;text-transform:uppercase;">Key Legislation Referenced</div>
+  <table style="width:100%;border-collapse:collapse;font-size:11px;">
+    <tr style="border-bottom:1px solid #F3F4F6;"><td style="padding:7px 12px;width:32%;vertical-align:top;"><strong>R638 (GN 638, 2018)</strong></td><td style="padding:7px 12px;color:#6B7280;">General Hygiene Requirements for Food Premises under the Foodstuffs, Cosmetics and Disinfectants Act 54 of 1972. Primary South African food premises law.</td></tr>
+    <tr style="border-bottom:1px solid #F3F4F6;background:#FAFAFA;"><td style="padding:7px 12px;vertical-align:top;"><strong>SANS 10330:2007</strong></td><td style="padding:7px 12px;color:#6B7280;">South African HACCP standard — Hazard Analysis and Critical Control Point system requirements.</td></tr>
+    <tr style="border-bottom:1px solid #F3F4F6;"><td style="padding:7px 12px;vertical-align:top;"><strong>ISO 22000:2018</strong></td><td style="padding:7px 12px;color:#6B7280;">International Food Safety Management Systems standard.</td></tr>
+    <tr style="border-bottom:1px solid #F3F4F6;background:#FAFAFA;"><td style="padding:7px 12px;vertical-align:top;"><strong>SANS 1828 / 1853</strong></td><td style="padding:7px 12px;color:#6B7280;">Certification for food-safe detergents and disinfectants — required on all chemicals used on food contact surfaces.</td></tr>
+    <tr style="border-bottom:1px solid #F3F4F6;"><td style="padding:7px 12px;vertical-align:top;"><strong>OHSA Act 85/1993</strong></td><td style="padding:7px 12px;color:#6B7280;">Occupational Health and Safety Act — PPE, chemical handling, staff safety obligations.</td></tr>
+    <tr><td style="padding:7px 12px;vertical-align:top;background:#FAFAFA;"><strong>FSSC 22000 V6</strong></td><td style="padding:7px 12px;color:#6B7280;background:#FAFAFA;">Food Safety System Certification — includes enhanced allergen management (Clause 2.5.6) and quality control requirements.</td></tr>
+  </table>
+</div>
+
+<div style="margin:0 24px 24px;background:#0F1F3D;border-radius:8px;padding:18px 20px;">
+  <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:5px;">Ready to Close These Gaps?</div>
+  <div style="font-size:12px;color:rgba(255,255,255,0.65);line-height:1.6;margin-bottom:12px;">Contact your Industroclean representative to discuss any finding in this report. We can provide products, training, hygiene files and compliance support for every item identified.</div>
+  <div style="font-size:12px;color:rgba(255,255,255,0.9);line-height:1.8;"><strong style="color:#E8611A;">Industroclean (Pty) Ltd</strong><br>Corner Picaroon &amp; Raft Str, Laser Park, Honeydew, 2170<br>Tel: (011) 801 4600</div>
+</div>
+
+<div style="padding:14px 24px 20px;border-top:3px solid #E8611A;text-align:center;">
+  <div style="font-size:10px;color:#9CA3AF;line-height:1.6;">This report is provided as a complimentary compliance advisory service by Industroclean (Pty) Ltd. It does not constitute a formal legal opinion. Report generated: ${fmtDate(dt)}.</div>
+</div>
+
+</div></body></html>`;
 }
 
-// ═══════════════════════════════════════════
-// EMAIL SENDING via EmailJS
-// ═══════════════════════════════════════════
 async function sendReport() {
-  const toEmail = document.getElementById('e-to').value.trim();
-  const ccEmail = document.getElementById('e-cc').value.trim();
+  const toEmail   = document.getElementById('e-to').value.trim();
+  const ccEmail   = document.getElementById('e-cc').value.trim();
   if (!toEmail) { toast('Please enter the store email address'); return; }
 
   const storeName = document.getElementById('f-storeName').value || 'Store';
   const mgrName   = document.getElementById('f-mgr').value || 'Store Manager';
-  const repName   = document.getElementById('f-rep').value || 'Your Industroclean Representative';
+  const repName   = document.getElementById('f-rep').value || 'Industroclean Representative';
   const dt        = document.getElementById('f-date').value;
-
-  const reportHTML = buildReport();
-
-  // Count findings
-  const answered = Object.values(answers);
+  const answered  = Object.values(answers);
   const passCount = answered.filter(a => a.answer).length;
   const failCount = answered.filter(a => !a.answer).length;
-  const tot = answered.length;
-  const pct = tot > 0 ? Math.round(passCount / tot * 100) : 0;
-  const rlbl = pct >= 85 ? 'LOW RISK' : pct >= 65 ? 'MODERATE RISK' : 'HIGH RISK';
+  const tot       = answered.length;
+  const pct       = tot > 0 ? Math.round(passCount / tot * 100) : 0;
+  const rlbl      = pct >= 85 ? 'LOW RISK' : pct >= 65 ? 'MODERATE RISK' : 'HIGH RISK';
 
-  // Show loading
+  const emailHTML = buildEmail();
+  console.log('Email size (chars):', emailHTML.length);
+
   document.getElementById('send-normal').style.display = 'none';
   document.getElementById('send-loading').style.display = 'block';
-
-  // Build plain-text findings list for template variables
-  const failLines = allQs
-    .filter(q => answers[q.id] && !answers[q.id].answer)
-    .map((q, i) => (i+1) + '. [Section ' + q.sl + '] ' + q.q)
-    .join('\n');
 
   try {
     const templateParams = {
@@ -1195,9 +1134,8 @@ async function sendReport() {
       pass_count:  String(passCount),
       fail_count:  String(failCount),
       total_count: String(tot),
-      fail_items:  failLines || 'None — all items compliant.',
       reply_to:    ccEmail || toEmail,
-      message:     reportHTML
+      message:     emailHTML
     };
 
     await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams);
@@ -1213,10 +1151,16 @@ async function sendReport() {
     document.getElementById('send-normal').style.display = 'block';
     toast('Send failed — opening preview in browser instead.', 4000);
     setTimeout(() => {
-      const blob = new Blob([reportHTML], { type: 'text/html' });
+      const blob = new Blob([emailHTML], { type: 'text/html' });
       window.open(URL.createObjectURL(blob), '_blank');
     }, 600);
   }
+}
+
+function previewReport() {
+  const html = buildEmail();
+  const blob = new Blob([html], { type: 'text/html' });
+  window.open(URL.createObjectURL(blob), '_blank');
 }
 
 // ═══════════════════════════════════════════

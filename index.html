@@ -1176,53 +1176,47 @@ async function sendReport() {
   document.getElementById('send-normal').style.display = 'none';
   document.getElementById('send-loading').style.display = 'block';
 
-  try {
-    emailjs.init(EMAILJS_PUBLIC_KEY);
+  // Build plain-text findings list for template variables
+  const failLines = allQs
+    .filter(q => answers[q.id] && !answers[q.id].answer)
+    .map((q, i) => (i+1) + '. [Section ' + q.sl + '] ' + q.q)
+    .join('\n');
 
-    // Build a clean text summary for the email body (EmailJS auto-template)
-    // The full HTML report is sent as the html_content parameter
+  try {
     const templateParams = {
       to_email:    toEmail,
       to_name:     mgrName,
-      cc_email:    ccEmail,
+      cc_email:    ccEmail || '',
       from_name:   repName,
       store_name:  storeName,
       audit_date:  fmtDate(dt),
       score_pct:   pct + '%',
       risk_level:  rlbl,
-      pass_count:  passCount,
-      fail_count:  failCount,
-      total_count: tot,
-      html_report: reportHTML,
-      reply_to:    ccEmail || 'compliance@industroclean.co.za',
-      subject:     `Compliance Audit Report — ${storeName} — ${fmtDate(dt)}`
+      pass_count:  String(passCount),
+      fail_count:  String(failCount),
+      total_count: String(tot),
+      fail_items:  failLines || 'None — all items compliant.',
+      reply_to:    ccEmail || toEmail,
+      message:     reportHTML
     };
 
     await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams);
 
     document.getElementById('send-loading').style.display = 'none';
-    const successEl = document.getElementById('send-success');
-    successEl.classList.add('show');
+    document.getElementById('send-success').classList.add('show');
     document.getElementById('send-success-msg').textContent =
-      `The compliance report has been sent to ${toEmail}${ccEmail ? ' (CC: ' + ccEmail + ')' : ''}. The store manager will receive a full, readable HTML report in their inbox.`;
+      'Report sent to ' + toEmail + (ccEmail ? ' (CC: ' + ccEmail + ')' : '') + '. The store will receive the full compliance report in their inbox.';
 
   } catch (err) {
     console.error('EmailJS error:', err);
     document.getElementById('send-loading').style.display = 'none';
     document.getElementById('send-normal').style.display = 'block';
-    toast('Email failed — opening preview instead. Check EmailJS config.', 4000);
-    // Fallback: open in browser
+    toast('Send failed — opening preview in browser instead.', 4000);
     setTimeout(() => {
       const blob = new Blob([reportHTML], { type: 'text/html' });
       window.open(URL.createObjectURL(blob), '_blank');
-    }, 500);
+    }, 600);
   }
-}
-
-function previewReport() {
-  const reportHTML = buildReport();
-  const blob = new Blob([reportHTML], { type: 'text/html' });
-  window.open(URL.createObjectURL(blob), '_blank');
 }
 
 // ═══════════════════════════════════════════
@@ -1235,7 +1229,10 @@ function fmtDate(s) {
   } catch { return s; }
 }
 
-// Init
+// ── Initialise EmailJS once on page load ──
+emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+
+// ── Set default audit date ──
 document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
 </script>
 </body>

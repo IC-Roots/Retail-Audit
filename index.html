@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Industroclean — In-Store Compliance Audit</title>
+<!-- EmailJS -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0F1F3D;--navy-mid:#1A3260;
+  --orange:#E8611A;--orange-lt:#F47C3C;--orange-bg:#FEF3EC;
+  --white:#FFFFFF;--warm-grey:#F7F6F4;--mid-grey:#E8E6E3;--border:#D8D6D3;
+  --text:#1C1C1C;--soft:#5A5A5A;
+  --green:#1B7A3E;--green-bg:#EAF7EF;--green-border:#A8D5B5;
+  --amber:#92400E;--amber-bg:#FEF3C7;--amber-border:#FCD34D;
+  --red:#991B1B;--red-bg:#FEF2F2;--red-border:#FCA5A5;
+  --blue:#1E40AF;--blue-bg:#EFF6FF;
+  --r:12px;--rs:8px;
+}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#E8E6E3;color:var(--text);-webkit-font-smoothing:antialiased}
+#app{max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;background:var(--white);position:relative;box-shadow:0 0 60px rgba(0,0,0,0.12)}
+
+/* TOP BAR */
+.topbar{background:var(--navy);padding:14px 18px 12px;position:sticky;top:0;z-index:100;flex-shrink:0}
+.topbar-brand{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.brand-mark{width:34px;height:34px;background:var(--orange);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;color:#fff;letter-spacing:-0.5px;flex-shrink:0}
+.brand-name{color:#fff;font-size:13px;font-weight:700;letter-spacing:0.06em}
+.brand-sub{color:rgba(255,255,255,0.45);font-size:10px;letter-spacing:0.05em;text-transform:uppercase}
+.prog-wrap{display:flex;align-items:center;gap:10px}
+.prog-track{flex:1;height:3px;background:rgba(255,255,255,0.15);border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;background:var(--orange);border-radius:2px;transition:width .3s ease}
+.prog-lbl{color:rgba(255,255,255,0.5);font-size:11px;font-weight:600;white-space:nowrap;min-width:48px;text-align:right}
+
+/* SCREENS */
+.screen{display:none;flex-direction:column;flex:1;overflow-y:auto}
+.screen.active{display:flex}
+
+/* WELCOME */
+.welcome-body{padding:28px 22px;display:flex;flex-direction:column;flex:1}
+.w-icon{width:64px;height:64px;background:var(--orange-bg);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:22px}
+.w-title{font-size:26px;font-weight:800;color:var(--navy);line-height:1.2;margin-bottom:10px}
+.w-title span{color:var(--orange)}
+.w-intro{font-size:14px;color:var(--soft);line-height:1.65;margin-bottom:20px}
+.w-note{background:var(--navy);color:rgba(255,255,255,0.8);font-size:12px;line-height:1.6;padding:14px 16px;border-radius:var(--rs);margin-bottom:24px}
+.w-note strong{color:var(--orange-lt)}
+.w-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:24px}
+.chip{background:var(--warm-grey);color:var(--soft);font-size:11px;font-weight:600;padding:5px 10px;border-radius:20px;letter-spacing:0.04em}
+
+/* STORE DETAILS */
+.form-body{padding:22px 20px;flex:1;overflow-y:auto}
+.fsec-title{font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--soft);margin-bottom:14px;margin-top:4px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;font-weight:700;color:var(--soft);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.05em}
+.field input,.field select,.field textarea{width:100%;padding:12px 13px;border:1.5px solid var(--border);border-radius:var(--rs);font-size:15px;font-family:inherit;color:var(--text);background:var(--white);outline:none;-webkit-appearance:none;appearance:none;transition:border-color .18s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--orange)}
+.field textarea{resize:none;height:72px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.divider{height:1px;background:var(--mid-grey);margin:18px 0}
+
+/* SECTION INTRO */
+.sec-intro{flex:1;display:flex;flex-direction:column}
+.sec-hero{background:var(--navy);padding:40px 24px 32px;flex:1;display:flex;flex-direction:column;justify-content:center}
+.sec-letter{width:54px;height:54px;background:var(--orange);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;margin-bottom:20px}
+.sec-title{font-size:24px;font-weight:800;color:#fff;line-height:1.25;margin-bottom:8px}
+.sec-sub{font-size:13px;color:rgba(255,255,255,0.55);line-height:1.55}
+.sec-count{margin-top:20px;font-size:10px;font-weight:700;letter-spacing:0.1em;color:var(--orange-lt);text-transform:uppercase}
+.sec-body{padding:22px 20px}
+
+/* QUESTION */
+.q-body{flex:1;padding:22px 20px 16px;display:flex;flex-direction:column;overflow-y:auto}
+.q-sec-lbl{font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.q-sec-lbl::before{content:'';display:block;width:14px;height:2px;background:var(--orange);border-radius:1px}
+.q-num{font-size:11px;font-weight:600;color:var(--soft);margin-bottom:12px}
+.q-text{font-size:18px;font-weight:700;color:var(--navy);line-height:1.35;margin-bottom:16px}
+
+/* WHY IT MATTERS */
+.q-why{background:var(--warm-grey);border-radius:var(--rs);padding:12px 14px;margin-bottom:14px}
+.q-why-lbl{font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--soft);margin-bottom:5px}
+.q-why-text{font-size:12px;color:var(--soft);line-height:1.55}
+.q-why-ref{font-size:10px;color:var(--orange);font-weight:600;margin-top:5px}
+
+/* REP GUIDANCE — blue callout shown on specific questions */
+.rep-guide{background:var(--blue-bg);border:1.5px solid #BFDBFE;border-radius:var(--rs);padding:12px 14px;margin-bottom:14px}
+.rep-guide-lbl{font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--blue);margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.rep-guide-lbl::before{content:'👁';font-size:11px}
+.rep-guide-text{font-size:12px;color:#1E3A5F;line-height:1.6}
+.rep-guide-text ul{padding-left:16px;margin-top:6px}
+.rep-guide-text ul li{margin-bottom:4px}
+.temp-table{width:100%;border-collapse:collapse;margin-top:8px;font-size:11px}
+.temp-table th{background:#1E40AF;color:#fff;padding:5px 8px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:0.05em}
+.temp-table td{padding:5px 8px;border-bottom:1px solid #BFDBFE;color:#1E3A5F}
+.temp-table tr:last-child td{border-bottom:none}
+.temp-table td:last-child{font-weight:700;text-align:right}
+.temp-ok{color:#1B7A3E}
+.temp-warn{color:#B45309}
+
+/* ANSWER BUTTONS */
+.ans-btns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.ans-btn{padding:18px 12px;border:2px solid var(--border);border-radius:var(--r);background:var(--white);font-size:16px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;transition:all .15s ease;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.ans-btn .bi{font-size:22px}
+.ans-btn .bl{font-size:12px;font-weight:700;letter-spacing:0.04em}
+.ans-btn.yes.sel{background:var(--green-bg);border-color:var(--green);color:var(--green)}
+.ans-btn.no.sel{background:var(--red-bg);border-color:var(--red);color:var(--red)}
+.ans-btn:active{transform:scale(0.97)}
+.notes-toggle{background:none;border:none;font-size:12px;color:var(--soft);cursor:pointer;padding:3px 0;text-decoration:underline;text-underline-offset:2px}
+.notes-inp{width:100%;margin-top:8px;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--rs);font-size:13px;font-family:inherit;resize:none;height:64px;outline:none;display:none}
+.notes-inp.open{display:block}
+
+/* NAV BAR */
+.nav-bar{padding:12px 18px 22px;display:flex;gap:10px;border-top:1px solid var(--mid-grey);background:var(--white);flex-shrink:0}
+.nav-back{padding:13px 18px;background:var(--warm-grey);border:none;border-radius:var(--rs);font-size:14px;font-weight:600;color:var(--soft);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.nav-next{flex:1;padding:13px 18px;background:var(--orange);border:none;border-radius:var(--rs);font-size:15px;font-weight:700;color:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s}
+.nav-next:disabled{background:var(--mid-grey);color:var(--soft)}
+.nav-next:active:not(:disabled){background:var(--orange-lt)}
+
+/* BUTTONS */
+.btn-primary{display:block;width:100%;padding:15px;background:var(--orange);color:#fff;border:none;border-radius:var(--rs);font-size:15px;font-weight:700;cursor:pointer;text-align:center;-webkit-tap-highlight-color:transparent;transition:background .15s}
+.btn-primary:active{background:var(--orange-lt)}
+.btn-outline{display:block;width:100%;padding:13px;background:transparent;color:var(--navy);border:2px solid var(--border);border-radius:var(--rs);font-size:14px;font-weight:600;cursor:pointer;text-align:center;-webkit-tap-highlight-color:transparent;margin-top:10px}
+
+/* SUMMARY */
+.sum-header{background:var(--navy);padding:26px 20px 22px;flex-shrink:0}
+.sum-title{font-size:20px;font-weight:800;color:#fff;margin-bottom:4px}
+.sum-store{font-size:14px;color:var(--orange-lt);font-weight:600}
+.sum-date{font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px}
+.score-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--mid-grey)}
+.score-box{background:#fff;padding:16px 10px;text-align:center}
+.score-num{font-size:30px;font-weight:900;line-height:1;margin-bottom:3px}
+.score-num.p{color:var(--green)}.score-num.f{color:var(--red)}.score-num.t{color:var(--navy)}
+.score-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--soft)}
+.meter-wrap{padding:18px 20px 0}
+.meter-row{display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:var(--soft);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px}
+.meter-track{height:7px;background:var(--red-bg);border-radius:4px;overflow:hidden;margin-bottom:5px}
+.meter-fill{height:100%;border-radius:4px;transition:width .5s ease}
+.meter-status{font-size:12px;color:var(--soft);margin-top:3px;line-height:1.5}
+.findings-sec{padding:18px 20px}
+.findings-title{font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--soft);margin-bottom:12px}
+.f-card{border-radius:var(--rs);margin-bottom:8px;overflow:hidden;border:1px solid var(--border)}
+.f-card.fail{border-left:4px solid var(--red)}
+.f-card.pass{border-left:4px solid var(--green)}
+.f-head{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.f-icon{font-size:15px;margin-top:1px;flex-shrink:0}
+.f-q{flex:1;font-size:13px;font-weight:600;color:var(--navy);line-height:1.4}
+.f-stag{font-size:9px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--soft);margin-top:2px}
+.f-chev{color:var(--soft);font-size:10px;margin-top:3px;transition:transform .2s;flex-shrink:0}
+.f-card.open .f-chev{transform:rotate(180deg)}
+.f-detail{display:none;padding:0 14px 12px 38px;font-size:12px;color:var(--soft);line-height:1.65}
+.f-card.open .f-detail{display:block}
+.f-remedy{margin-top:8px;padding:8px 10px;background:var(--orange-bg);border-radius:6px;font-size:11px;color:var(--orange);font-weight:600;line-height:1.5}
+.f-repnote{margin-top:7px;font-size:11px;color:var(--soft);font-style:italic}
+
+/* EMAIL SECTION */
+.email-sec{padding:20px;border-top:1px solid var(--mid-grey);background:var(--warm-grey)}
+.email-title{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:8px}
+.email-intro{font-size:12px;color:var(--soft);margin-bottom:16px;line-height:1.55}
+.email-field{margin-bottom:12px}
+.email-field label{display:block;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--soft);margin-bottom:5px}
+.email-field input{width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--rs);font-size:14px;font-family:inherit;background:#fff;outline:none}
+.email-field input:focus{border-color:var(--orange)}
+
+/* SENDING STATE */
+.send-state{display:none;text-align:center;padding:20px 0}
+.send-state.active{display:block}
+.spinner{width:36px;height:36px;border:3px solid var(--mid-grey);border-top-color:var(--orange);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* SUCCESS STATE */
+.success-banner{display:none;background:var(--green-bg);border:1.5px solid var(--green-border);border-radius:var(--rs);padding:16px;text-align:center;margin-top:12px}
+.success-banner.show{display:block}
+.success-banner .sb-icon{font-size:28px;margin-bottom:8px}
+.success-banner .sb-title{font-size:14px;font-weight:700;color:var(--green);margin-bottom:4px}
+.success-banner .sb-sub{font-size:12px;color:#4A7A5A;line-height:1.5}
+
+/* TOAST */
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(70px);background:var(--navy);color:#fff;padding:11px 20px;border-radius:30px;font-size:13px;font-weight:600;z-index:300;transition:transform .28s ease;pointer-events:none;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* MISC */
+.mt16{margin-top:16px}.mt24{margin-top:24px}
+.warn-banner{background:var(--red-bg);border:1px solid var(--red-border);border-radius:var(--rs);padding:11px 14px;margin-bottom:14px;font-size:12px;color:var(--red);font-weight:600;line-height:1.5}
+.ok-banner{background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--rs);padding:11px 14px;margin-bottom:14px;font-size:12px;color:var(--green);font-weight:600;line-height:1.5}
+
+@media(min-width:481px){
+  body{display:flex;align-items:flex-start;justify-content:center;background:#1A1A2E;padding:20px}
+  #app{border-radius:16px;margin:0 auto;min-height:calc(100vh - 40px)}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- TOP BAR -->
+  <div class="topbar" id="topbar">
+    <div class="topbar-brand">
+      <div class="brand-mark">IC</div>
+      <div>
+        <div class="brand-name">Industroclean</div>
+        <div class="brand-sub">Compliance Audit</div>
+      </div>
+    </div>
+    <div class="prog-wrap">
+      <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+      <div class="prog-lbl" id="prog-lbl">0 / 30</div>
+    </div>
+  </div>
+
+  <!-- WELCOME -->
+  <div class="screen active" id="scr-welcome">
+    <div class="welcome-body">
+      <div class="w-icon">🔍</div>
+      <div class="w-title">In-Store<br><span>Compliance</span><br>Audit Tool</div>
+      <p class="w-intro">A professional compliance walkthrough for food retail premises. Complete 30 checks in 10–15 minutes. A full legal compliance report is automatically emailed to the store at the end.</p>
+      <div class="w-chips">
+        <span class="chip">R638</span><span class="chip">HACCP</span><span class="chip">ISO 22000</span>
+        <span class="chip">SANS 1828 / 1853</span><span class="chip">OHSA</span><span class="chip">FSSC 22000</span>
+      </div>
+      <div class="w-note"><strong>For the rep:</strong> Every "No" answer generates a detailed legal explanation and Industroclean remediation recommendation in the emailed report. Blue guidance panels on certain questions tell you exactly what to look for in-store.</div>
+      <button class="btn-primary" onclick="show('scr-store')">Start Audit →</button>
+    </div>
+  </div>
+
+  <!-- STORE DETAILS -->
+  <div class="screen" id="scr-store">
+    <div class="form-body">
+      <div class="fsec-title">Store Information</div>
+      <div class="field"><label>Store Name *</label><input id="f-storeName" type="text" placeholder="e.g. City Centre Food Market" autocomplete="organization"></div>
+      <div class="field"><label>Store Address</label><input id="f-storeAddr" type="text" placeholder="Street, Suburb, City"></div>
+      <div class="field"><label>Store Type</label>
+        <select id="f-storeType">
+          <option>Supermarket / Grocery</option><option>Butchery</option><option>Deli / Ready-to-Eat</option>
+          <option>Bakery</option><option>Fresh Produce</option><option>Pharmacy / Health Retail</option><option>Other Food Retail</option>
+        </select>
+      </div>
+      <div class="divider"></div>
+      <div class="fsec-title">Contact Details</div>
+      <div class="field"><label>Manager / Owner Name</label><input id="f-mgr" type="text" placeholder="Full name" autocomplete="name"></div>
+      <div class="field"><label>Manager Email * (Report will be sent here)</label><input id="f-mgrEmail" type="email" placeholder="manager@store.co.za" autocomplete="email"></div>
+      <div class="field"><label>Manager Phone</label><input id="f-mgrPhone" type="tel" placeholder="Cell number" autocomplete="tel"></div>
+      <div class="divider"></div>
+      <div class="fsec-title">Rep Details</div>
+      <div class="field"><label>Your Name (Rep)</label><input id="f-rep" type="text" placeholder="Your full name"></div>
+      <div class="field"><label>Your Email (CC on report)</label><input id="f-repEmail" type="email" placeholder="rep@industroclean.co.za"></div>
+      <div class="field"><label>Audit Date</label><input id="f-date" type="date"></div>
+    </div>
+    <div class="nav-bar">
+      <button class="nav-back" onclick="show('scr-welcome')">← Back</button>
+      <button class="nav-next" onclick="startAudit()">Begin Audit →</button>
+    </div>
+  </div>
+
+  <!-- SECTION INTRO -->
+  <div class="screen" id="scr-sec">
+    <div class="sec-intro">
+      <div class="sec-hero">
+        <div class="sec-letter" id="si-letter">A</div>
+        <div class="sec-title" id="si-title">Section</div>
+        <div class="sec-sub" id="si-sub">Description</div>
+        <div class="sec-count" id="si-count">X questions</div>
+      </div>
+      <div class="sec-body">
+        <button class="btn-primary" onclick="startSection()">Start Section →</button>
+        <button class="btn-outline" onclick="skipSection()">Skip this section</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUESTION -->
+  <div class="screen" id="scr-q">
+    <div class="q-body" id="q-body">
+      <div class="q-sec-lbl" id="q-sec-lbl">Section</div>
+      <div class="q-num" id="q-num">Question 1 of 30</div>
+      <div class="q-text" id="q-text">Question text</div>
+      <div class="rep-guide" id="rep-guide" style="display:none">
+        <div class="rep-guide-lbl">What to look for in-store</div>
+        <div class="rep-guide-text" id="rep-guide-text"></div>
+      </div>
+      <div class="q-why">
+        <div class="q-why-lbl">Why this matters</div>
+        <div class="q-why-text" id="q-why-text">Reason</div>
+        <div class="q-why-ref" id="q-why-ref">Ref</div>
+      </div>
+      <div class="ans-btns">
+        <button class="ans-btn yes" id="btn-yes" onclick="doAnswer(true)"><span class="bi">✅</span><span class="bl">YES</span></button>
+        <button class="ans-btn no" id="btn-no" onclick="doAnswer(false)"><span class="bi">❌</span><span class="bl">NO</span></button>
+      </div>
+      <div>
+        <button class="notes-toggle" id="notes-tog" onclick="toggleNotes()">+ Add a note</button>
+        <textarea class="notes-inp" id="q-notes" placeholder="Optional rep note for this item…"></textarea>
+      </div>
+    </div>
+    <div class="nav-bar">
+      <button class="nav-back" onclick="prevQ()">← Back</button>
+      <button class="nav-next" id="btn-next" onclick="nextQ()" disabled>Next →</button>
+    </div>
+  </div>
+
+  <!-- SUMMARY -->
+  <div class="screen" id="scr-sum">
+    <div class="sum-header">
+      <div class="sum-title">Audit Complete</div>
+      <div class="sum-store" id="s-store"></div>
+      <div class="sum-date" id="s-date"></div>
+    </div>
+    <div class="score-grid">
+      <div class="score-box"><div class="score-num p" id="s-pass">0</div><div class="score-lbl">Compliant</div></div>
+      <div class="score-box"><div class="score-num f" id="s-fail">0</div><div class="score-lbl">Action Needed</div></div>
+      <div class="score-box"><div class="score-num t" id="s-tot">0</div><div class="score-lbl">Checked</div></div>
+    </div>
+    <div class="meter-wrap">
+      <div class="meter-row"><span>Compliance Score</span><span id="m-pct">0%</span></div>
+      <div class="meter-track"><div class="meter-fill" id="m-fill" style="width:0%"></div></div>
+      <div class="meter-status" id="m-status"></div>
+    </div>
+    <div class="findings-sec">
+      <div class="findings-title">Items Requiring Action</div>
+      <div id="fail-list"></div>
+      <div class="findings-title mt24" id="pass-lbl" style="display:none">Compliant Items</div>
+      <div id="pass-list"></div>
+    </div>
+    <div class="email-sec">
+      <div class="email-title">📧 Send Compliance Report to Store</div>
+      <div class="email-intro">A fully formatted compliance report — with legal references, non-compliance explanations and Industroclean recommendations — will be emailed directly to the store. No attachment needed; the report is a beautiful, readable email.</div>
+      <div class="email-field"><label>Send To (Store Manager Email)</label><input id="e-to" type="email" placeholder="manager@store.co.za"></div>
+      <div class="email-field"><label>CC (Your Rep Email)</label><input id="e-cc" type="email" placeholder="rep@industroclean.co.za"></div>
+      <div id="send-normal">
+        <button class="btn-primary" onclick="sendReport()">Send Compliance Report →</button>
+        <button class="btn-outline" onclick="previewReport()">Preview Report in Browser</button>
+      </div>
+      <div class="send-state" id="send-loading">
+        <div class="spinner"></div>
+        <div style="font-size:13px;color:var(--soft)">Sending compliance report…</div>
+      </div>
+      <div class="success-banner" id="send-success">
+        <div class="sb-icon">✅</div>
+        <div class="sb-title">Report Sent Successfully</div>
+        <div class="sb-sub" id="send-success-msg">The compliance report has been sent.</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- #app -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// EMAILJS CONFIG — Replace with your credentials
+// ═══════════════════════════════════════════════════
+const EMAILJS_SERVICE_ID  = 'YOUR_SERVICE_ID';   // e.g. 'service_abc123'
+const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';  // e.g. 'template_xyz456'
+const EMAILJS_PUBLIC_KEY  = 'YOUR_PUBLIC_KEY';   // e.g. 'abc123XYZ'
+
+// ═══════════════════════════════════════════════════
+// QUESTION DATA
+// ═══════════════════════════════════════════════════
+const SECTIONS = [
+{
+  letter:'A', title:'Chemical Compliance', sub:'Are the right chemicals being used correctly and safely?',
+  questions:[
+    {
+      q:'Are all cleaning chemicals certified to SANS 1828 (food-safe detergents) and/or SANS 1853 (disinfectants) — with the certification number visible on the label?',
+      why:'Uncertified chemicals may not effectively kill pathogens and can leave harmful residues on food contact surfaces. Certification numbers confirm independent testing.',
+      ref:'R638 Reg 6 | SANS 1828 | SANS 1853',
+      guide:null,
+      failExp:'Using chemicals without SANS 1828 or SANS 1853 certification on food premises is a direct violation of R638 Regulation 6. These standards confirm that products are tested, safe for food contact surfaces and effective against dangerous pathogens including Listeria monocytogenes, Salmonella and E. coli. Without certification, a store cannot demonstrate that its cleaning programme provides adequate protection.',
+      remedy:'Replace with Industroclean\'s certified food-safe chemical range. All products carry visible SANS certification numbers on the label. We can replace your entire chemical range in a single visit and provide a full SDS file.'
+    },
+    {
+      q:'Is a dedicated food-safe sanitiser used on meat and food contact surfaces — completely separate from general floor or wall cleaning chemicals?',
+      why:'Floor chemicals are not formulated for food contact. Using them on food surfaces creates chemical residue risk and fails to adequately reduce pathogen loads at the most critical point.',
+      ref:'R638 Reg 6 | HACCP CCP',
+      guide:null,
+      failExp:'R638 Regulation 6 requires food contact surfaces to contain no more than 100 viable micro-organisms per cm². General-purpose floor cleaners are not formulated to meet this standard and often contain fragrances, dyes or surfactants not suitable for food contact. Using them on meat preparation surfaces, deli counters or food prep tables constitutes a Critical Control Point failure under HACCP.',
+      remedy:'Industroclean supplies Sintol 6g (chlorine-based food contact sanitiser) and Diner-Bac (food-safe disinfectant cleaner) specifically approved for meat and food contact surfaces. We can set up a clear two-chemical system with colour coding to prevent any mix-up.'
+    },
+    {
+      q:'Is a dilution control system in place — dosing pump, wall-mounted station or clearly measured dispensing? Staff should NOT be free-pouring chemicals.',
+      why:'Free-pouring creates random concentrations — too weak means no sanitising effect, too strong means chemical residue risk on food surfaces and wasted chemical cost.',
+      ref:'R638 Reg 6 | HACCP Principle 3',
+      guide:null,
+      failExp:'Incorrect chemical dilution is a HACCP critical control failure at the monitoring stage (Principle 4). Under-dilution means surfaces are not adequately sanitised; over-dilution creates toxic chemical residue risk on food contact surfaces. Neither result can be demonstrated as compliant at audit. Free-pouring also typically results in 40–75% product wastage.',
+      remedy:'Industroclean supplies wall-mounted dosing stations that automatically dispense the exact dilution every time. This eliminates human error, protects your compliance record, and typically saves more than the equipment cost in the first month through reduced chemical waste.'
+    },
+    {
+      q:'Are Safety Data Sheets (SDS) available on-site for every chemical in use — accessible to all staff who handle them?',
+      why:'SDS documents are legally required by OHSA. They contain critical first aid, safe handling and emergency response information that staff must be able to access immediately.',
+      ref:'OHSA Act 85 of 1993 | R638 Reg 10',
+      guide:null,
+      failExp:'Under the Occupational Health and Safety Act 85 of 1993, employers must provide staff with access to hazardous substance safety information. SDS sheets must be physically on site and accessible — not stored at a head office or available only on request. Failure to comply is a criminal liability for the employer and will result in an OHSA violation notice.',
+      remedy:'Industroclean provides SDS sheets for our complete chemical range. We recommend housing them in a Hygiene File in the chemical storage area. We can supply the file, SDS set and complete chemical management setup in one visit.'
+    },
+    {
+      q:'Are chemicals stored in a dedicated, clearly labelled area — completely separate from food storage and preparation areas?',
+      why:'Chemical contamination of food is a CCP failure. Chemicals stored near food create risk of accidental contamination and will result in immediate Certificate of Acceptability suspension.',
+      ref:'R638 Reg 6.3 | HACCP PRP',
+      guide:null,
+      failExp:'R638 Regulation 6.3 explicitly prohibits any conditions where food may be contaminated by chemicals. Storing cleaning chemicals alongside, above, or adjacent to food creates direct contamination risk. A health inspector who observes chemical storage in food areas can immediately suspend the Certificate of Acceptability under R638 Regulation 4. This means the store must cease trading until the issue is rectified and the prohibition is officially lifted.',
+      remedy:'Industroclean supplies dedicated chemical storage cabinets, lockable doors and storage area signage to meet inspection requirements. A proper chemical storage station also protects against theft, spillage and staff injury.'
+    },
+    {
+      q:'Do cleaning staff know the correct dilution ratio for each chemical they use daily? (Ask one staff member as a spot-check.)',
+      why:'A staff member who cannot state the correct dilution for their chemical is evidence of a training compliance failure — and is also likely creating a compliance risk every time they clean.',
+      ref:'R638 Reg 10(1)(b) | ISO 22000 Clause 7.2',
+      guide:null,
+      failExp:'R638 Regulation 10(1)(b) places legal responsibility on the person in charge to ensure all staff are adequately trained in food safety and hygiene. ISO 22000 Clause 7.2 requires documented competence records. A cleaning staff member who cannot demonstrate knowledge of correct chemical dilution is evidence of inadequate training, which will be flagged as a non-conformity in any formal audit. In the event of a food safety incident, untrained staff is an aggravating factor in liability proceedings.',
+      remedy:'Industroclean provides in-store training sessions covering correct chemical use, dilution ratios, colour coding, personal hygiene and cleaning procedures. Training takes approximately one hour, and signed attendance records are provided for your Hygiene File.'
+    }
+  ]
+},
+{
+  letter:'B', title:'Equipment & Colour Coding', sub:'Is cross-contamination being systematically prevented?',
+  questions:[
+    {
+      q:'Is a full colour-coded cleaning equipment system in use — with separate colours for raw meat, deli/ready-to-eat, bakery, produce, restrooms, receiving area and general floor?',
+      why:'Using the same mop, cloth or bucket across departments is one of the most common pathogen transfer routes in retail food environments. Colour coding makes the separation visible and auditable.',
+      ref:'R638 Reg 5 | HACCP PRP',
+      guide:null,
+      failExp:'Cross-contamination via shared cleaning equipment is a primary vector for food contamination in retail environments. R638 Regulation 5 requires food to be protected against contamination by best available method, which explicitly includes equipment segregation. HACCP Prerequisite Programmes mandate colour-coded systems. Absence of a colour-coding system is a critical PRP gap flagged in every formal audit, and represents direct contamination liability if an incident occurs.',
+      remedy:'Industroclean supplies a complete colour-coded system: cloths, mops, buckets and scrapers in 8 colours with department labels. Standard allocation: Red=Butchery/Raw Meat, Blue=Bakery, Yellow=Deli/Ready-to-Eat, Green=Produce, Grey=General Floor, Black=Receiving, White=Restrooms, Orange=Liquor/Specialty.'
+    },
+    {
+      q:'Are cloths soaked in an approved disinfectant solution between uses — NOT left dry on surfaces or equipment?',
+      why:'Dry cloths at room temperature allow bacteria to multiply rapidly. A cloth left dry on a meat counter can carry more bacteria after two hours than the surface it was cleaning.',
+      ref:'HACCP CCP | R638 Reg 6 | Listeria Prevention',
+      guide:null,
+      failExp:'Listeria monocytogenes survives and multiplies on damp surfaces and biofilm on cloths left at room temperature. South Africa\'s 2017–2018 Listeria outbreak, which caused 218 deaths, was partly traced to contaminated food contact surfaces and wiping cloths. Cloths must be held in an actively dosed disinfectant solution (correct dilution of a SANS 1853-certified product) between uses. This is a HACCP Critical Control Point — failure represents direct public health risk.',
+      remedy:'Industroclean supplies colour-coded disinfectant bucket systems with Sintol 6g (sodium hypochlorite-based sanitiser) or Diner-Bac for correct cloth soaking. We can demonstrate the system setup and provide all required products.'
+    },
+    {
+      q:'Are colour-coded cutting boards in use — with completely separate boards for raw meat, ready-to-eat food and allergen-sensitive preparation?',
+      why:'Shared cutting boards are a direct food safety and allergen cross-contamination risk. Bacteria and allergen proteins transfer through the board surface between uses, even after washing.',
+      ref:'HACCP CCP | FSSC 22000 Clause 2.5.6 | R638 Reg 6',
+      guide:null,
+      failExp:'Using shared cutting boards between raw meat and ready-to-eat food is a Critical Control Point failure under HACCP. Allergen proteins (peanut, gluten, dairy, sesame) are not eliminated by standard water washing — they require validated allergen cleaning procedures. FSSC 22000 Clause 2.5.6 requires allergen control measures to be validated. In the event of a cross-contamination incident or allergen-induced reaction, evidence of shared cutting boards constitutes serious legal liability.',
+      remedy:'Industroclean supplies colour-coded cutting board sets and dedicated allergen-preparation boards. Recommended minimum: one for raw meat, one for ready-to-eat, one dedicated allergen-safe board. We can also supply a validated allergen cleaning procedure as a documented SOP.'
+    },
+    {
+      q:'Are brushes, scrapers and scrubbing equipment cleaned, sanitised and stored off the floor after every use?',
+      why:'Brushware left on floors or in contaminated areas accumulates bacteria in bristles and crevices that cannot be reached by surface spraying. This equipment becomes a contamination source rather than a cleaning tool.',
+      ref:'R638 Reg 6 | ISO 22000 Clause 8.2',
+      guide:null,
+      failExp:'Brushware, scrapers and scrubbing tools accumulate organic matter in bristles and joints. This provides ideal conditions for Listeria and other pathogens to establish biofilm. R638 Regulation 6 requires all equipment to be maintained in a clean, hygienic state. Equipment stored on floors, in dirty water or in contaminated areas represents a PRP failure under ISO 22000 Clause 8.2. Biofilm-contaminated brushware actively spreads pathogens to surfaces being cleaned.',
+      remedy:'Industroclean supplies hygienically designed brushware with wall-mounted storage hooks. We conduct a brushware assessment on every visit and provide replacement kits where worn or contaminated equipment is identified.'
+    },
+    {
+      q:'Is all cleaning equipment in good condition — no frayed mop heads, cracked buckets, split cloths or visibly worn brushware?',
+      why:'Damaged equipment cannot be adequately cleaned. Cracks, fraying and split fibres harbour bacteria that no chemical can reach or remove.',
+      ref:'R638 Reg 6 | HACCP PRP',
+      guide:null,
+      failExp:'R638 Regulation 6 requires all facilities and equipment to be maintained in a state that allows them to be cleaned to hygiene standards. Cracked or split equipment develops micro-crevices that harbour bacteria and biofilm completely inaccessible to cleaning or sanitising agents. Using degraded equipment on food contact surfaces is a HACCP prerequisite failure and will be recorded as a non-conformity in any formal audit.',
+      remedy:'Industroclean offers a scheduled equipment replenishment programme. During every visit we assess equipment condition and provide a replacement quote for any item below standard. Consistent equipment replacement is one of the most cost-effective compliance investments a store can make.'
+    },
+    {
+      q:'Is a signed daily cleaning schedule completed and physically on site, with records kept for at least 6 months?',
+      why:'Without written, signed records a store cannot prove compliance — even if they clean perfectly every day. An inspector who cannot see records will record a non-conformity regardless of actual cleaning standards.',
+      ref:'R638 Reg 10(16) | HACCP Principle 7 | ISO 22000 Clause 7.5',
+      guide:null,
+      failExp:'R638 Regulation 10(16) requires the person in charge to keep records for a minimum of 6 months. HACCP Principle 7 mandates full documentation of all monitoring activities, corrective actions and verification. ISO 22000 Clause 7.5 requires documented information to be controlled and retained. "We clean every day" is not a legally defensible statement without documentation. Records are the only protection a store has during an inspection or after a food safety incident.',
+      remedy:'Industroclean provides a complete Hygiene File containing daily cleaning schedule templates, staff sign-off sheets, training records, SDS storage pockets and a corrective action log. This file is the compliance evidence for any inspection.'
+    }
+  ]
+},
+{
+  letter:'C', title:'Facilities, Drains & Hand Hygiene', sub:'Are the physical conditions of the premises supporting food safety?',
+  questions:[
+    {
+      q:'Are floor drains in meat prep and high-risk areas physically scrubbed and disinfected daily — NOT just rinsed with water?',
+      why:'Drains are the primary reservoir for Listeria biofilm. Water rinsing does not remove biofilm — only physical scrubbing with a certified disinfectant is effective.',
+      ref:'R638 Reg 5 | HACCP CCP | Listeria Prevention',
+      guide:null,
+      failExp:'The South African 2017–2018 Listeria outbreak (218 deaths, 1,060 confirmed cases) was directly linked to biofilm in drains and on processing surfaces. Biofilm is a protective matrix that bacteria form on surfaces — water rinsing cannot remove it, and standard disinfectant spray alone is ineffective without prior physical scrubbing. Daily physical drain scrubbing with a SANS 1853-certified disinfectant is the minimum requirement and is a HACCP Critical Control Point.',
+      remedy:'Industroclean supplies Ketodrain (enzyme drain maintainer), Diner-Drain (heavy-duty drain degreaser) and dedicated drain brushware kits for daily physical biofilm removal. We provide a documented drain cleaning SOP and can demonstrate the correct procedure.'
+    },
+    {
+      q:'Are soap dispensers installed and fully stocked at ALL handwashing points — including butchery entry, food prep areas and after-toilet access points?',
+      why:'An empty or missing soap dispenser makes correct handwashing impossible. This is a non-negotiable legal requirement and an immediate R638 violation.',
+      ref:'R638 Reg 5(vi) | R638 Reg 11',
+      guide:null,
+      failExp:'R638 Regulation 5(vi) explicitly requires food premises to maintain handwashing facilities with soap or cleaning agents and clean disposable drying material at all times. R638 Regulation 11 requires food handlers to wash hands thoroughly before handling food. Without functional, stocked soap dispensers, this legal requirement cannot be met. An inspector who finds empty or missing dispensers will record an immediate violation — it is one of the most commonly cited non-conformities in food premises inspections.',
+      remedy:'Industroclean supplies and services soap dispensers and antibacterial soap on a scheduled replenishment contract. We can install dispensers, supply product and set up a restocking schedule to ensure you are never found non-compliant at inspection.'
+    },
+    {
+      q:'Are single-use paper towel dispensers installed at all hand basins — with no shared cloth towels or loose-roll paper in food handling areas?',
+      why:'Shared drying materials re-contaminate freshly washed hands. A cloth towel that 15 people have used carries more bacteria than unwashed hands.',
+      ref:'R638 Reg 5(vi) | HACCP PRP',
+      guide:null,
+      failExp:'R638 Regulation 5(vi) requires clean disposable drying material. Shared cloth towels and loose-roll paper that multiple people handle are proven re-contamination routes — research has shown that hand contamination levels can increase by up to 1,000 times when communal drying materials are used. In food handling areas, this constitutes a HACCP Prerequisite Programme failure and will be recorded as a non-conformity at audit.',
+      remedy:'Industroclean supplies single-sheet paper towel dispensers and paper towel stock on a replenishment contract. Single-sheet systems are more hygienic, more cost-effective than loose roll and fully meet R638 requirements.'
+    },
+    {
+      q:'Are refrigeration units clean internally — with no blood pooling, mould, food debris or odour visible inside cold rooms or display fridges?',
+      why:'Visible contamination inside refrigeration units means Listeria and mould are actively present at the exact temperatures where Listeria thrives. This is a critical CCP failure.',
+      ref:'R638 Reg 6 | HACCP CCP | Listeria Prevention',
+      guide:null,
+      failExp:'Listeria monocytogenes specifically thrives at refrigeration temperatures between 0°C and 10°C. Blood pooling in fridges provides the organic matter for sustained pathogen survival. Mould on interior surfaces indicates a chronic cleaning failure and potential mycotoxin production. R638 Regulation 6 requires all facilities to be clean, rust-free and non-absorbent. Visible contamination inside refrigeration is a critical CCP violation that must be immediately corrected.',
+      remedy:'Industroclean supplies cold room and refrigeration-specific cleaning chemicals formulated for low-temperature application. We can provide a validated cold room cleaning SOP and demonstrate the correct procedure on-site.'
+    },
+    {
+      q:'Are wet floor and caution signs used during and after mopping — and are the signs in good, legible condition?',
+      why:'A slip-and-fall injury without visible wet floor signage removes the employer\'s primary legal defence and constitutes direct negligence under OHSA.',
+      ref:'OHSA Act 85 of 1993',
+      guide:null,
+      failExp:'Under the Occupational Health and Safety Act 85 of 1993, employers have a statutory duty of care to protect both employees and members of the public from foreseeable hazards. A wet floor without adequate, visible signage constitutes employer negligence. In the event of a slip-and-fall injury, the absence of wet floor signs eliminates the employer\'s primary legal defence and creates full liability for medical costs, compensation claims and potential criminal charges.',
+      remedy:'Industroclean supplies high-visibility wet floor caution signs. We recommend a minimum of two signs per active mopping zone, positioned before cleaning begins. Worn or illegible signs must be replaced — they provide no legal protection.'
+    },
+    {
+      q:'Is there no visible standing water, pooling or persistent damp patches in any food handling, storage or cold room areas?',
+      why:'Standing water creates perfect bacterial growth conditions and a direct contamination pathway from floors to food surfaces via splashing and foot traffic.',
+      ref:'R638 Reg 5 | HACCP PRP',
+      guide:null,
+      failExp:'R638 Regulation 5 requires food premises to have effective waste-water disposal systems and prohibits conditions that allow contamination. Standing water in food areas creates a direct contamination pathway — bacteria travel via water droplets from floors to food contact surfaces, equipment and packaging. Persistent damp also dramatically accelerates biofilm formation in floor joints and drains, increasing Listeria risk.',
+      remedy:'Industroclean can advise on effective drainage and floor cleaning practices. For high-traffic retail floor areas, a mechanical floor scrubber removes water far more effectively than manual mopping, eliminating the standing water risk and reducing cleaning time.'
+    }
+  ]
+},
+{
+  letter:'D', title:'Allergen Management', sub:'Are allergens being controlled, segregated and communicated correctly?',
+  questions:[
+    {
+      q:'Does the store have a documented list of all allergens handled or sold on site — covering the 14 major allergens?',
+      why:'You cannot control allergens you have not identified. An allergen register is the foundation of all allergen management and a mandatory starting point under FSSC 22000.',
+      ref:'FSSC 22000 Clause 2.5.6 | ISO 22000 Clause 8.5',
+      guide:`The 14 major allergens that must be tracked are:
+<ul>
+  <li><strong>Milk</strong> (dairy) — in cheese, butter, cream, yoghurt</li>
+  <li><strong>Eggs</strong> — in baked goods, pasta, mayonnaise</li>
+  <li><strong>Gluten/Wheat</strong> — in bread, pastry, flour products</li>
+  <li><strong>Peanuts</strong> — often in sauces, confectionery</li>
+  <li><strong>Tree nuts</strong> — almonds, cashews, walnuts, pecans</li>
+  <li><strong>Fish</strong> — any finfish species</li>
+  <li><strong>Shellfish/Crustaceans</strong> — prawns, crab, lobster</li>
+  <li><strong>Sesame</strong> — seeds, tahini, oils</li>
+  <li><strong>Soy</strong> — tofu, soy sauce, edamame</li>
+  <li><strong>Celery & Celeriac</strong></li>
+  <li><strong>Mustard</strong></li>
+  <li><strong>Lupin</strong> — lupin flour in bakery</li>
+  <li><strong>Molluscs</strong> — squid, mussels, oysters</li>
+  <li><strong>Sulphur dioxide / Sulphites</strong> — dried fruit, wine, meat products</li>
+</ul>
+<strong>Ask:</strong> "Can you show me your allergen register?" If none exists or staff don't know what allergens are on site — this is a fail.`,
+      failExp:'FSSC 22000 Clause 2.5.6 requires organisations to maintain a list of ALL allergens handled on site, with validated control measures. Without an allergen register, there is no framework to assess cross-contamination risk or demonstrate compliance. Allergen-induced anaphylaxis is life-threatening. In the event of a customer allergic reaction, the absence of an allergen management plan constitutes serious legal liability under the Foodstuffs, Cosmetics and Disinfectants Act 54 of 1972.',
+      remedy:'Industroclean can assist with conducting an allergen walkthrough and compiling an initial allergen register. We supply allergen awareness training materials, allergen advisory signage and dedicated colour-coded allergen equipment to support a compliant allergen management programme.'
+    },
+    {
+      q:'Are allergen-containing products stored physically separated from allergen-free products — with no shared open shelving, no allergen products stored above allergen-free items and no unsealed allergen packaging near open food?',
+      why:'Allergen transfer does not require direct contact. Dust from nearby nut, gluten or dairy products can contaminate food stored below or adjacent without any visible sign.',
+      ref:'FSSC 22000 Clause 2.5.6 | R638 Reg 6',
+      guide:`What to physically check:
+<ul>
+  <li><strong>Storage above/below:</strong> Are bulk nuts, flour, or powdered dairy stored on shelves directly above open allergen-free products? Even sealed bags can leak or split.</li>
+  <li><strong>Open shelving:</strong> Loose nuts, dried fruit or allergen-containing items displayed in open bins next to allergen-free options — direct cross-contact risk.</li>
+  <li><strong>Fridge segregation:</strong> In deli fridges, check if cheese (dairy) and items labelled dairy-free share trays or shelving without physical separation.</li>
+  <li><strong>Bakery display:</strong> Gluten-containing items displayed alongside or directly below gluten-free products without a physical barrier or separate display case.</li>
+  <li><strong>Receiving area:</strong> Allergen deliveries unpacked in the same area as open ready-to-eat food without segregation during the intake process.</li>
+</ul>
+<strong>The test:</strong> If you can physically see an allergen source positioned so it could drip, spill, or dust onto an allergen-free product below or beside it — that is a non-compliant storage arrangement.`,
+      failExp:'Allergen cross-contact does not require direct mixing — allergen proteins transfer through airborne particles, packaging contact and surface contamination. FSSC 22000 Clause 2.5.6 requires allergen control measures to be validated. R638 Regulation 6 prohibits conditions that may contaminate food. Inadequate allergen segregation has caused fatalities globally. In South Africa, under the Foodstuffs Act, mislabelling or failing to prevent allergen cross-contact in food offered for sale constitutes a criminal offence.',
+      remedy:'Industroclean supplies allergen segregation signage, dedicated allergen storage labels and advisory materials. We recommend combining physical separation with clear labelling and staff awareness training. We can conduct a site-specific allergen storage risk assessment during our visit.'
+    },
+    {
+      q:'Are cutting boards, deli slicers, utensils and surfaces used for allergen products clearly dedicated — and never used for allergen-free food without a validated deep clean in between?',
+      why:'Standard water washing does not remove allergen proteins. A slicer used for cheese and then "washed" with water and used for a dairy-free product is not allergen-safe.',
+      ref:'FSSC 22000 Clause 2.5.6 | HACCP CCP',
+      guide:`What to look for:
+<ul>
+  <li><strong>Deli slicer:</strong> Is the same slicer used for cheese (dairy allergen) and then for slicing cold meats sold as dairy-free? Ask staff — is there a dedicated slicer, or a validated allergen changeover clean?</li>
+  <li><strong>Bread cutting:</strong> Is the bread knife used for gluten-containing loaves also used to cut gluten-free bread? Even crumbs on the blade are enough to cause a reaction in a highly sensitive person.</li>
+  <li><strong>Bakery equipment:</strong> Do mixing bowls, trays and rolling surfaces get used for both nut-containing and nut-free products? Without dedicated equipment or a validated cleaning and swab-testing procedure, this is not compliant.</li>
+  <li><strong>Cutting boards:</strong> Check if boards are colour-coded for allergens. If the deli uses yellow boards for ready-to-eat food but the same yellow board is used for items with and without nuts — that is a gap even within the colour system.</li>
+  <li><strong>How to check changeover:</strong> Ask staff: "What do you do before using this equipment for a nut-free or gluten-free product?" If the answer is "we wash it," ask whether there is a written validated procedure. If not, that is a non-conformity.</li>
+</ul>`,
+      failExp:'Allergen proteins such as peanut, gluten and dairy are not eliminated by standard washing. A validated cleaning procedure using appropriate chemicals, verified by allergen surface testing, is required to confirm equipment is allergen-free before production changeover. FSSC 22000 Clause 2.5.6 mandates validated and verified allergen control measures. This is a CCP under HACCP — failure can directly cause an allergen incident resulting in customer death or serious injury and criminal liability for the store.',
+      remedy:'Industroclean supplies dedicated colour-coded allergen cutting boards, allergen-dedicated knife sets and the correct validated cleaning chemicals for allergen removal. We can provide written allergen changeover cleaning procedures to use as a documented SOP.'
+    },
+    {
+      q:'Have ALL staff — including cleaning and floor staff — received allergen awareness training, with signed records on site?',
+      why:'Cleaning staff handle the equipment most likely to carry allergen residue. A cleaner who does not understand allergen cross-contact can unknowingly undo all the controls put in place by food preparation staff.',
+      ref:'FSSC 22000 Clause 2.5.6 | R638 Reg 10(1)(b)',
+      guide:null,
+      failExp:'FSSC 22000 Clause 2.5.6 explicitly requires ALL personnel to receive allergen awareness training and records to be maintained. R638 Regulation 10(1)(b) places legal responsibility on the person in charge for staff training. In an allergen incident, proof of training for all relevant staff is the primary legal defence. Cleaning staff who do not understand allergen risks may clean allergen-containing equipment alongside allergen-free equipment, contaminating sanitised surfaces and undoing food preparation controls.',
+      remedy:'Industroclean provides in-store allergen awareness training sessions covering the 14 major allergens, cross-contact risks, correct equipment handling and validated cleaning procedures. Signed attendance records are provided for your Hygiene File.'
+    },
+    {
+      q:'Are \'may contain\' allergen warnings on products based on an actual risk assessment — not applied routinely to all products as a blanket disclaimer?',
+      why:'Blanket precautionary allergen labelling without a supporting risk assessment is a labelling offence under South African food law. Labels must reflect actual, assessed risk — not generic caution.',
+      ref:'FSSC 22000 Clause 2.5.6 | Foodstuffs Act 54 of 1972',
+      guide:null,
+      failExp:'FSSC 22000 Clause 2.5.6 states that precautionary allergen labels must only be applied where a formal risk assessment identifies an actual cross-contamination risk — not as a blanket disclaimer applied to all products. Under the Foodstuffs, Cosmetics and Disinfectants Act 54 of 1972, food labelling must be truthful and not misleading. Applying "may contain nuts" to every product without a supporting risk assessment is a labelling offence and undermines the purpose of allergen labelling, potentially causing harm to allergic consumers who cannot trust the label.',
+      remedy:'Industroclean can assist with allergen risk assessment guidance and referral to accredited food safety consultants where a full allergen management plan review is required. We also supply allergen advisory signage and training materials to support a compliant, evidence-based allergen labelling approach.'
+    }
+  ]
+},
+{
+  letter:'E', title:'Temperature & Cold Chain', sub:'Is food stored and displayed at the correct legal temperatures?',
+  questions:[
+    {
+      q:'Are all refrigeration units displaying a clearly visible thermometer — and are fridges and freezers actively holding the correct legal storage temperatures?',
+      why:'Legally required temperatures prevent rapid bacterial multiplication. A unit without a visible thermometer cannot demonstrate compliance and is an automatic R638 violation.',
+      ref:'R638 Reg 6 | R638 Annexure E',
+      guide:`<strong>Legal temperature requirements under R638 Annexure E:</strong>
+<table class="temp-table">
+  <tr><th>Product Type</th><th>Required Temp</th></tr>
+  <tr><td>Ice cream, sorbet (excl. soft serve), frozen fish</td><td class="temp-warn">≤ −18°C</td></tr>
+  <tr><td>All other frozen products</td><td class="temp-warn">≤ −12°C</td></tr>
+  <tr><td>Raw fish, molluscs, crustaceans, offal, poultry, raw meat, milk (chilled)</td><td class="temp-warn">≤ +4°C</td></tr>
+  <tr><td>All other perishable chilled products</td><td class="temp-warn">≤ +5°C</td></tr>
+  <tr><td>Any heated perishable food (not frozen/chilled)</td><td class="temp-warn">≥ +60°C</td></tr>
+  <tr><td>Danger zone — rapid bacterial growth</td><td class="temp-ok" style="color:#991B1B">+5°C to +60°C</td></tr>
+</table>
+<strong>What to check:</strong>
+<ul>
+  <li>Is a thermometer physically mounted inside each unit and visible without opening the door?</li>
+  <li>Take readings on a probe thermometer where possible — surface of packaged product, or the air temperature displayed.</li>
+  <li>Look for: frost build-up on freezer coils (restricts airflow, raises temp), seals on fridge doors (broken seals = unit cannot hold temp), pooling condensation inside units (warm air ingress), and any food stored directly against the back wall (blocks airflow, warmer zone).</li>
+  <li>Check display fridge "load lines" — product stacked above the cold air return line is outside the refrigerated zone and may be above legal temperature even if the unit reads correctly.</li>
+</ul>`,
+      failExp:'R638 Regulation 6 requires all chilling and freezing apparatus to have a thermometer visible at all times. R638 Annexure E sets the legal storage temperatures above. Food may not legally be offered for sale if it has been stored above these temperatures. This is a HACCP Critical Control Point — a cold chain break creates direct conditions for pathogen multiplication to levels that cause food poisoning. An inspector measuring product above legal temperature may immediately prohibit sale of the affected stock.',
+      remedy:'While refrigeration equipment is outside Industroclean\'s direct supply scope, we strongly recommend immediate action. Missing thermometers must be replaced — these are inexpensive and mandatory. Units not holding legal temperatures must be serviced or replaced. Industroclean supplies temperature log sheets as part of our Hygiene File system and can advise on correct monitoring frequency and recording protocols.'
+    },
+    {
+      q:'Are temperature logs being completed at defined intervals and retained on site for a minimum of 6 months?',
+      why:'Without temperature records, a store cannot prove the cold chain has been maintained — even if it has been. Records are the only legal evidence of compliance.',
+      ref:'R638 Reg 10(16) | HACCP Principle 4 & 7',
+      guide:null,
+      failExp:'HACCP Principle 4 requires a monitoring system for each Critical Control Point, including defined frequency, method and responsible person. HACCP Principle 7 requires complete documentation of all monitoring activities. R638 Regulation 10(16) requires records to be retained for a minimum of 6 months. Temperature records are the primary evidence of cold chain compliance. In the event of a food safety incident or regulatory inspection, a store that cannot produce temperature logs has no legal protection.',
+      remedy:'Industroclean provides daily and weekly temperature log sheets as part of our Hygiene File system. The file includes fridge and freezer monitoring records, corrective action columns for out-of-range readings and supervisor sign-off sections that meet R638 and HACCP documentation requirements.'
+    },
+    {
+      q:'Are perishable products — particularly raw meat, poultry and dairy — never left at room temperature for extended periods during display restocking or at goods receiving?',
+      why:'The temperature danger zone (5°C to 60°C) allows rapid and dangerous bacterial multiplication. Products left unrefrigerated for as little as 2 hours can reach unsafe bacterial counts.',
+      ref:'R638 Annexure E | HACCP CCP',
+      guide:`What to observe:
+<ul>
+  <li><strong>At goods receiving:</strong> Are chilled or frozen deliveries left on the receiving dock or in an ambient area while staff complete other tasks? Products must be moved to refrigeration within the minimum time possible — ideally under 30 minutes for chilled, immediately for frozen.</li>
+  <li><strong>During restocking:</strong> Is raw meat, poultry or dairy removed from the cold room in large quantities and left on a bench while individual products are packed onto shelves? Only remove what can be shelved within 10–15 minutes.</li>
+  <li><strong>Display counters:</strong> Are open display cases maintaining correct temperature throughout? Check the mid-point and top of the product stack — these are the warmest areas and where out-of-range temperatures occur first.</li>
+  <li><strong>The 4-hour rule:</strong> Under R638, perishable food sold or consumed on premises may only remain outside correct temperature control for a maximum of 4 hours. Beyond this point, it must be discarded.</li>
+  <li><strong>Thawing:</strong> Is frozen product thawed at room temperature? Legal thawing requires controlled conditions — either in a chiller at ≤5°C core temperature, or under controlled conditions for a maximum of 10 hours with immediate return to refrigeration.</li>
+</ul>`,
+      failExp:'R638 Annexure E sets strict legal temperature requirements. The danger zone (5°C–60°C) allows bacteria including Salmonella, E. coli O157 and Listeria to multiply exponentially — bacterial counts can double every 20 minutes. R638 allows a maximum of 4 hours outside temperature control for perishable food sold or consumed on the premises. This is not a guideline but a legal limit. Stock left outside this limit must be discarded. Thawing at room temperature is illegal — frozen product may be thawed only if the core temperature does not exceed 5°C and the process takes no longer than 10 hours.',
+      remedy:'Industroclean can provide temperature monitoring training, receiving procedure SOPs and corrective action documentation for temperature exceedances as part of our Hygiene File system. These records protect the store in the event of an inspection or incident.'
+    }
+  ]
+},
+{
+  letter:'F', title:'Staff Hygiene & PPE', sub:'Are people the biggest control point — or the biggest risk?',
+  questions:[
+    {
+      q:'Are all food handling and cleaning staff wearing appropriate, clean PPE — aprons, hairnets, gloves and closed non-slip footwear?',
+      why:'Hair, skin cells, jewellery and footwear contamination are some of the most common physical and biological contamination sources in food environments.',
+      ref:'R638 Reg 9 | OHSA Act 85 of 1993',
+      guide:null,
+      failExp:'R638 Regulation 9 requires every food handler to wear suitable protective clothing, including head coverings and footwear. PPE must be clean and neat at the start of handling and remain clean throughout. The regulation also requires visitors to food areas to wear suitable PPE. An inspector observing staff without correct PPE will record an immediate violation. Under OHSA, failure to provide appropriate PPE to staff handling chemicals is a criminal employer offence.',
+      remedy:'Industroclean supplies food-safe PPE including nitrile gloves, aprons, hairnets and beard guards for food handlers. Chemical-resistant gloves are supplied separately for cleaning staff. We can conduct a PPE assessment and provide a complete replenishment kit in a single visit.'
+    },
+    {
+      q:'Are chemical-resistant gloves available and worn by all staff when handling cleaning chemicals?',
+      why:'Skin contact with undiluted or incorrectly diluted chemicals can cause chemical burns, skin sensitisation and eye damage. Glove use is a mandatory OHSA requirement.',
+      ref:'OHSA Act 85 of 1993 | R638 Reg 9',
+      guide:null,
+      failExp:'The Occupational Health and Safety Act 85 of 1993 requires employers to protect employees from hazardous substances. Chemical-resistant gloves are mandatory PPE when handling cleaning chemicals — standard food-handler nitrile gloves are not sufficient as chemical barriers. In the event of a chemical injury to a staff member not wearing correct gloves, the employer bears full liability. OHSA inspectors check for glove provision and use independently of food safety inspections.',
+      remedy:'Industroclean supplies both food-safe nitrile gloves for food handlers and chemical-resistant gloves for cleaning staff. These are available as separate SKUs or combined in a PPE kit. We recommend maintaining a minimum 2-week stock on-site at all times.'
+    },
+    {
+      q:'Are staff handling non-prepacked food not wearing jewellery, and do they have short, clean nails — free from nail polish or artificial nails?',
+      why:'Jewellery can fall into food. Nail polish, artificial nails and long nails harbour bacteria that cannot be reached by handwashing and can detach into food as physical contaminants.',
+      ref:'R638 Reg 11(1)(b) | R638 Reg 10(9)',
+      guide:null,
+      failExp:'R638 Regulation 11(1)(b) prohibits food handlers from having fingernails that are not short, trimmed, clean and free from adornment. R638 Regulation 10(9) requires the person in charge to ensure that staff handling non-prepacked food do not wear jewellery or other adornments that may contact food unless suitably covered. Jewellery and nail adornments are direct physical and microbiological contamination sources and a legal violation under R638.',
+      remedy:'Industroclean provides staff hygiene awareness training sessions that cover all R638 Regulation 11 requirements including jewellery, nails, clothing and handwashing. We also supply laminated personal hygiene reference posters for display in food prep and changing areas.'
+    },
+    {
+      q:'Is there a documented daily health declaration process for staff before each shift — confirming they are not ill, have no open wounds and have washed their hands?',
+      why:'Ill staff handling food is both a direct public health risk and a legal liability. A documented daily declaration creates the paper trail needed to demonstrate compliance.',
+      ref:'R638 Reg 11(2)(b) | ISO 22000 Clause 7.2',
+      guide:null,
+      failExp:'R638 Regulation 11(2)(b) prohibits any person suffering from, or suspected of carrying, a contagious disease transmissible through food from handling food or food contact surfaces. This specifically includes: jaundice, diarrhoea, vomiting, fever, sore throat with fever, or discharge from eyes, ears or nose. Such a person may only resume food handling after submitting a medical certificate confirming fitness. Without a documented daily declaration process, non-compliance cannot be detected or demonstrated to an inspector — creating liability every time an ill staff member handles food undetected.',
+      remedy:'Industroclean\'s Hygiene File includes daily staff health declaration forms with pre-shift sign-off by individual staff and supervisor countersignature. These records form the legal paper trail required to demonstrate compliance with R638 Regulation 11.'
+    },
+    {
+      q:'Have all food handling and cleaning staff received documented food hygiene training within the last 12 months — with signed records available on site?',
+      why:'Annual training is a legal minimum. The person in charge is personally legally liable if untrained staff cause a food safety incident and no training records can be produced.',
+      ref:'R638 Reg 10(1)(a)(b)(d) | ISO 22000 Clause 7.2',
+      guide:null,
+      failExp:'R638 Regulation 10(1)(a) requires the person in charge to be suitably qualified or adequately trained in food safety and hygiene. Regulation 10(1)(b) requires all other food handling staff to be adequately trained. Regulation 10(1)(d) requires training programmes and records to be kept, routinely updated and made available to inspectors on request. In the event of a food safety incident where untrained staff are involved, the absence of training records exposes the person in charge to criminal liability under the Foodstuffs Act 54 of 1972.',
+      remedy:'Industroclean provides in-store food hygiene training sessions covering R638 requirements, correct cleaning procedures, chemical safety, allergen awareness and personal hygiene standards. Sessions are typically one hour and include signed attendance records for immediate inclusion in your Hygiene File.'
+    }
+  ]
+},
+{
+  letter:'G', title:'Records & Documentation', sub:'Can this store prove it is compliant — or is it relying on word of mouth?',
+  questions:[
+    {
+      q:'Is a comprehensive Hygiene File present on site — including cleaning schedules, chemical lists, SDS sheets, training records and past audit findings?',
+      why:'The Hygiene File is the compliance evidence for any inspection. Without it, a store cannot demonstrate compliance even if it is fully compliant in practice.',
+      ref:'R638 Reg 10(16) | HACCP Principle 7 | ISO 22000 Clause 7.5',
+      guide:null,
+      failExp:'R638 Regulation 10(16) requires the person in charge to keep records for a minimum of 6 months. HACCP Principle 7 mandates complete documentation of all monitoring, corrective actions and verification. ISO 22000 Clause 7.5 requires documented information to be controlled and retained. A store without a Hygiene File has no centralised compliance evidence — this is the critical gap identified in virtually every formal food safety audit. In the event of a food safety incident, lack of documentation is the primary indicator of systemic compliance failure.',
+      remedy:'The Industroclean Hygiene File is a complete, structured compliance filing system: daily cleaning schedules, staff health declarations, chemical dilution cards, SDS storage pockets, training attendance records, audit history and a corrective action log. This single document is the most important compliance tool we supply.'
+    },
+    {
+      q:'Are daily cleaning schedules signed off consistently and legibly — not completed in bulk or obviously backdated?',
+      why:'Backdated or bulk-completed records are immediately identifiable by inspectors. They provide no legal protection and may be treated as falsified documentation.',
+      ref:'R638 Reg 10(16) | HACCP Principle 7',
+      guide:null,
+      failExp:'Inspectors are trained to identify retrospectively completed records. Identical handwriting across all entries, implausible consistency, bulk signatures dated the same day or records that contradict other evidence are red flags. Under R638 Regulation 10, records must be accurate and truthful. Falsified records remove any legal protection they would otherwise provide and may constitute an offence under the Foodstuffs, Cosmetics and Disinfectants Act 54 of 1972, converting a compliance gap into a criminal liability.',
+      remedy:'Industroclean\'s Hygiene File uses clearly structured daily sign-off sheets with individual line entries per task, time of completion, responsible staff member and supervisor countersignature. The format is designed to generate genuinely compliant, audit-ready records through consistent daily use.'
+    },
+    {
+      q:'Is the Certificate of Acceptability (CoA) currently displayed conspicuously in the store — valid and not under any prohibition order?',
+      why:'Without a valid, displayed CoA the store is operating illegally. A prohibited CoA means the business must cease food handling until the prohibition is formally lifted by the local authority.',
+      ref:'R638 Reg 3 | Foodstuffs Act 54 of 1972',
+      guide:null,
+      failExp:'R638 Regulation 3 requires every food premises to hold and conspicuously display a valid Certificate of Acceptability. The certificate is issued by the local authority and can be suspended temporarily or withdrawn permanently for violations. Under R638 Regulation 15, operating food premises without a valid CoA is a criminal offence under the Foodstuffs, Cosmetics and Disinfectants Act 54 of 1972, with penalties under Section 18(1). A prohibition order means the store must immediately cease food handling — the prohibition can only be lifted after a written request to the local authority and a physical re-inspection by an authorised inspector within 72 working hours.',
+      remedy:'This must be resolved directly with the local authority. Industroclean can assist by ensuring all hygiene requirements underlying CoA compliance are in order — chemicals, equipment, cleaning schedules, records and training. We can conduct a full pre-inspection readiness review to prepare the store for a local authority re-inspection.'
+    },
+    {
+      q:'Is a documented pest control programme in place with a certified pest control provider — with monthly inspection reports and pest activity logs available on site?',
+      why:'Pest activity in a food premises is an immediate and serious R638 violation. Monthly certified inspections are the legal minimum, and documentation must be available to inspectors.',
+      ref:'R638 Reg 5(iii) | R638 Reg 10(3) | HACCP PRP',
+      guide:`What to look for (signs of pest activity):
+<ul>
+  <li><strong>Rodents:</strong> Dark, rice-shaped droppings along walls or behind equipment; gnaw marks on packaging, wood or cables; rub marks (dark greasy smears) along walls and pipes at floor level; musky odour in confined areas; nesting material (shredded paper, fabric) in hidden corners.</li>
+  <li><strong>Cockroaches:</strong> Small dark brown cylindrical droppings (coffee-grain size); egg cases (oothecae) — brown oval capsules — in cracks and behind equipment; musty odour in affected areas; live cockroaches (indicates heavy infestation as they avoid light). Focus: under fridges, behind dishwashers, in drain areas, inside electrical panels.</li>
+  <li><strong>Flies:</strong> More than occasional flies in food prep areas; fly specks (small black dots from fly excrement) on walls, ceilings or equipment near food.</li>
+  <li><strong>Documentation:</strong> Ask to see the pest control service provider's last report. It should show company name, SAIPCOC registration, date, areas inspected, bait stations serviced, activity level and recommendations.</li>
+</ul>`,
+      failExp:'R638 Regulation 5(iii) requires food premises to have effective means of controlling flies, cockroaches and other insects. Regulation 10(3) places responsibility on the person in charge for effective pest control. Evidence of pest activity — droppings, gnaw marks, live insects or rodents — in a food premises is an immediate serious violation. A certified pest control service must conduct and document monthly inspections at minimum. Without inspection records, the store cannot demonstrate a functioning pest control programme at audit.',
+      remedy:'Pest control services are outside Industroclean\'s direct supply scope. However, we strongly recommend engaging a SAIPCOC (South African Institute for Pest Control Operations) registered provider immediately if no programme is in place. Industroclean supports pest prevention through correct chemical storage, waste management protocols, drain maintenance and the general hygiene standards that reduce pest attractants and harborage sites.'
+    }
+  ]
+}
+];
+
+// ═══════════════════════════════════════════
+// BUILD FLAT QUESTION LIST
+// ═══════════════════════════════════════════
+let allQs = [];
+SECTIONS.forEach((sec, si) => {
+  sec.questions.forEach((q, qi) => {
+    allQs.push({ id:`${si}_${qi}`, si, qi, sl:sec.letter, st:sec.title, ...q });
+  });
+});
+const TOTAL = allQs.length;
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+let answers = {};
+let curIdx = 0;
+let pendingSec = null;
+
+// ═══════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function toast(msg, dur=2600) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), dur);
+}
+function updateProg() {
+  const n = Object.keys(answers).length;
+  const pct = Math.round(n / TOTAL * 100);
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-lbl').textContent = n + ' / ' + TOTAL;
+}
+
+// ═══════════════════════════════════════════
+// AUDIT FLOW
+// ═══════════════════════════════════════════
+function startAudit() {
+  const name = document.getElementById('f-storeName').value.trim();
+  if (!name) { toast('Please enter the store name'); return; }
+  if (!document.getElementById('f-date').value) {
+    document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+  }
+  curIdx = 0; pendingSec = 0;
+  showSecIntro(0);
+}
+
+function showSecIntro(si) {
+  const s = SECTIONS[si];
+  document.getElementById('si-letter').textContent = s.letter;
+  document.getElementById('si-title').textContent = s.title;
+  document.getElementById('si-sub').textContent = s.sub;
+  document.getElementById('si-count').textContent = s.questions.length + ' questions in this section';
+  pendingSec = si;
+  show('scr-sec');
+}
+
+function startSection() {
+  const first = allQs.findIndex(q => q.si === pendingSec);
+  curIdx = first;
+  renderQ();
+}
+
+function skipSection() {
+  const next = pendingSec + 1;
+  if (next < SECTIONS.length) showSecIntro(next);
+  else showSummary();
+}
+
+function renderQ() {
+  const q = allQs[curIdx];
+  document.getElementById('q-sec-lbl').textContent = 'Section ' + q.sl + ' — ' + q.st;
+  document.getElementById('q-num').textContent = 'Question ' + (curIdx + 1) + ' of ' + TOTAL;
+  document.getElementById('q-text').textContent = q.q;
+  document.getElementById('q-why-text').textContent = q.why;
+  document.getElementById('q-why-ref').textContent = q.ref;
+
+  // Rep guidance
+  const guideEl = document.getElementById('rep-guide');
+  const guideTxt = document.getElementById('rep-guide-text');
+  if (q.guide) {
+    guideTxt.innerHTML = q.guide;
+    guideEl.style.display = 'block';
+  } else {
+    guideEl.style.display = 'none';
+  }
+
+  // Restore answer
+  const ex = answers[q.id];
+  document.getElementById('btn-yes').classList.toggle('sel', ex && ex.answer === true);
+  document.getElementById('btn-no').classList.toggle('sel', ex && ex.answer === false);
+  const notesInp = document.getElementById('q-notes');
+  notesInp.classList.remove('open');
+  notesInp.value = ex ? (ex.notes || '') : '';
+  document.getElementById('notes-tog').textContent = '+ Add a note';
+  document.getElementById('btn-next').disabled = ex === undefined;
+
+  updateProg();
+  show('scr-q');
+}
+
+function doAnswer(val) {
+  const q = allQs[curIdx];
+  const notes = document.getElementById('q-notes').value;
+  answers[q.id] = { answer: val, notes };
+  document.getElementById('btn-yes').classList.toggle('sel', val === true);
+  document.getElementById('btn-no').classList.toggle('sel', val === false);
+  document.getElementById('btn-next').disabled = false;
+  updateProg();
+}
+
+function nextQ() {
+  const q = allQs[curIdx];
+  if (answers[q.id]) answers[q.id].notes = document.getElementById('q-notes').value;
+  const next = curIdx + 1;
+  if (next >= TOTAL) { showSummary(); return; }
+  const curSec = allQs[curIdx].si;
+  const nextSec = allQs[next].si;
+  curIdx = next;
+  if (nextSec !== curSec) showSecIntro(nextSec);
+  else renderQ();
+}
+
+function prevQ() {
+  if (curIdx === 0) { show('scr-store'); return; }
+  curIdx--;
+  renderQ();
+}
+
+function toggleNotes() {
+  const inp = document.getElementById('q-notes');
+  const btn = document.getElementById('notes-tog');
+  const open = inp.classList.toggle('open');
+  btn.textContent = open ? '− Hide note' : '+ Add a note';
+  if (open) inp.focus();
+}
+
+// ═══════════════════════════════════════════
+// SUMMARY
+// ═══════════════════════════════════════════
+function showSummary() {
+  const storeName = document.getElementById('f-storeName').value || 'Store';
+  const dt = document.getElementById('f-date').value;
+  document.getElementById('s-store').textContent = storeName;
+  document.getElementById('s-date').textContent = fmtDate(dt) + ' — Industroclean Compliance Audit';
+
+  const answered = Object.entries(answers).map(([id, v]) => ({id, ...v}));
+  const passes = answered.filter(a => a.answer);
+  const fails = answered.filter(a => !a.answer);
+  const tot = answered.length;
+  const pct = tot > 0 ? Math.round(passes.length / tot * 100) : 0;
+
+  document.getElementById('s-pass').textContent = passes.length;
+  document.getElementById('s-fail').textContent = fails.length;
+  document.getElementById('s-tot').textContent = tot;
+  document.getElementById('m-pct').textContent = pct + '%';
+
+  const fill = document.getElementById('m-fill');
+  fill.style.width = pct + '%';
+  fill.style.background = pct >= 80 ? '#1B7A3E' : pct >= 60 ? '#B45309' : '#991B1B';
+
+  let status;
+  if (pct >= 85) status = '✅ Good compliance posture. Continue monitoring and maintaining records.';
+  else if (pct >= 65) status = '⚠️ Moderate risk. Several gaps require attention before an inspection.';
+  else status = '🚨 High risk. Immediate remediation strongly recommended. Compliance shortfalls could result in local authority action.';
+  document.getElementById('m-status').textContent = status;
+
+  const failList = document.getElementById('fail-list');
+  const passList = document.getElementById('pass-list');
+  failList.innerHTML = ''; passList.innerHTML = '';
+  let failCount = 0;
+
+  allQs.forEach(qData => {
+    const res = answers[qData.id];
+    if (!res) return;
+    const isFail = !res.answer;
+    const card = document.createElement('div');
+    card.className = 'f-card ' + (isFail ? 'fail' : 'pass');
+    card.innerHTML = `
+      <div class="f-head" onclick="this.parentElement.classList.toggle('open')">
+        <div class="f-icon">${isFail ? '❌' : '✅'}</div>
+        <div>
+          <div class="f-q">${qData.q}</div>
+          <div class="f-stag">Section ${qData.sl} — ${qData.st}</div>
+        </div>
+        <div class="f-chev">▼</div>
+      </div>
+      <div class="f-detail">
+        ${isFail ? `<div>${qData.failExp}</div><div class="f-remedy">🔧 ${qData.remedy}</div>` : '<div style="color:var(--green)">Compliant — maintain current standards.</div>'}
+        ${res.notes ? `<div class="f-repnote">Rep note: ${res.notes}</div>` : ''}
+      </div>`;
+    if (isFail) { failList.appendChild(card); failCount++; }
+    else passList.appendChild(card);
+  });
+
+  if (failCount === 0) failList.innerHTML = '<div class="ok-banner">✅ No non-compliant items found.</div>';
+  document.getElementById('pass-lbl').style.display = passes.length > 0 ? 'block' : 'none';
+
+  document.getElementById('e-to').value = document.getElementById('f-mgrEmail').value;
+  document.getElementById('e-cc').value = document.getElementById('f-repEmail').value;
+
+  // Reset send state
+  document.getElementById('send-normal').style.display = 'block';
+  document.getElementById('send-loading').style.display = 'none';
+  document.getElementById('send-success').classList.remove('show');
+
+  show('scr-sum');
+  updateProg();
+}
+
+// ═══════════════════════════════════════════
+// REPORT HTML GENERATION
+// ═══════════════════════════════════════════
+function buildReport() {
+  const storeName  = document.getElementById('f-storeName').value || 'Your Store';
+  const storeAddr  = document.getElementById('f-storeAddr').value || '';
+  const storeType  = document.getElementById('f-storeType').value || '';
+  const mgrName    = document.getElementById('f-mgr').value || 'Store Manager';
+  const repName    = document.getElementById('f-rep').value || 'Your Industroclean Representative';
+  const dt         = document.getElementById('f-date').value;
+
+  const answered = Object.values(answers);
+  const passCount = answered.filter(a => a.answer).length;
+  const failCount = answered.filter(a => !a.answer).length;
+  const tot = answered.length;
+  const pct = tot > 0 ? Math.round(passCount / tot * 100) : 0;
+
+  const col  = pct >= 80 ? '#1B7A3E' : pct >= 60 ? '#B45309' : '#991B1B';
+  const rlbl = pct >= 85 ? 'LOW RISK' : pct >= 65 ? 'MODERATE RISK' : 'HIGH RISK';
+  const rbg  = pct >= 85 ? '#EAF7EF' : pct >= 65 ? '#FEF3C7' : '#FEF2F2';
+
+  // Failures grouped by section
+  const failsBySec = {};
+  SECTIONS.forEach((_,i) => failsBySec[i] = []);
+  allQs.forEach(qd => {
+    const r = answers[qd.id];
+    if (r && !r.answer) failsBySec[qd.si].push({ qd, notes: r.notes });
+  });
+
+  let failsHTML = '';
+  SECTIONS.forEach((sec, si) => {
+    const items = failsBySec[si];
+    if (!items.length) return;
+    failsHTML += `
+    <div style="margin-bottom:32px;">
+      <div style="background:#E8611A;color:#fff;padding:11px 18px;border-radius:8px 8px 0 0;font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;">
+        Section ${sec.letter} — ${sec.title}
+      </div>
+      ${items.map(({ qd, notes }) => `
+      <div style="border:1px solid #E5E7EB;border-top:none;background:#fff;">
+        <div style="padding:18px 18px 0 18px;">
+          <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;">
+            <span style="font-size:16px;flex-shrink:0;">❌</span>
+            <div style="font-size:14px;font-weight:700;color:#0F1F3D;line-height:1.4;">${qd.q}</div>
+          </div>
+          <div style="background:#F9FAFB;border-radius:6px;padding:10px 12px;margin-bottom:12px;">
+            <div style="font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#9CA3AF;margin-bottom:4px;">Regulation Reference</div>
+            <div style="font-size:12px;color:#E8611A;font-weight:600;">${qd.ref}</div>
+          </div>
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#9CA3AF;margin-bottom:6px;">What This Means for Your Store</div>
+          <div style="font-size:13px;color:#374151;line-height:1.7;margin-bottom:14px;">${qd.failExp}</div>
+          <div style="background:#FEF3EC;border-left:4px solid #E8611A;padding:12px 14px;border-radius:0 8px 8px 0;margin-bottom:${notes ? '10px' : '18px'};">
+            <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#E8611A;margin-bottom:5px;">How Industroclean Can Help</div>
+            <div style="font-size:13px;color:#4A2500;line-height:1.65;">${qd.remedy}</div>
+          </div>
+          ${notes ? `<div style="font-size:11px;color:#9CA3AF;font-style:italic;padding-bottom:14px;">Auditor note: ${notes}</div>` : ''}
+        </div>
+      </div>`).join('')}
+    </div>`;
+  });
+
+  // Passes
+  const passItems = allQs.filter(q => answers[q.id] && answers[q.id].answer);
+  const passesHTML = passItems.length > 0 ? `
+    <div style="margin-bottom:32px;">
+      <div style="background:#1B7A3E;color:#fff;padding:11px 18px;border-radius:8px 8px 0 0;font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;">
+        Compliant Items — ${passItems.length} Passed
+      </div>
+      ${passItems.map(qd => `
+      <div style="border:1px solid #E5E7EB;border-top:none;background:#fff;padding:12px 18px;display:flex;gap:10px;align-items:flex-start;">
+        <span style="font-size:14px;flex-shrink:0;">✅</span>
+        <div style="font-size:13px;color:#374151;line-height:1.4;">${qd.q}</div>
+      </div>`).join('')}
+    </div>` : '';
+
+  // Section scores table
+  const secScores = SECTIONS.map((sec, si) => {
+    const secQs = allQs.filter(q => q.si === si && answers[q.id]);
+    const sp = secQs.filter(q => answers[q.id].answer).length;
+    const st2 = secQs.length;
+    if (!st2) return '';
+    const sp2 = Math.round(sp / st2 * 100);
+    const sc = sp2 >= 80 ? '#1B7A3E' : sp2 >= 60 ? '#B45309' : '#991B1B';
+    return `<tr><td style="padding:7px 0;font-size:13px;color:#374151;border-bottom:1px solid #F3F4F6;">Section ${sec.letter}: ${sec.title}</td><td style="padding:7px 0;text-align:right;font-size:13px;font-weight:700;color:${sc};border-bottom:1px solid #F3F4F6;">${sp}/${st2} (${sp2}%)</td></tr>`;
+  }).join('');
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Compliance Audit Report — ${storeName}</title>
+</head>
+<body style="margin:0;padding:0;background:#F3F4F6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#1C1C1C;">
+<div style="max-width:680px;margin:0 auto;background:#fff;">
+
+  <!-- HEADER -->
+  <div style="background:#0F1F3D;padding:32px 28px 26px;">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:22px;">
+      <div style="width:46px;height:46px;background:#E8611A;border-radius:10px;text-align:center;line-height:46px;font-size:16px;font-weight:900;color:#fff;flex-shrink:0;">IC</div>
+      <div>
+        <div style="color:#fff;font-size:16px;font-weight:800;letter-spacing:0.04em;">INDUSTROCLEAN (PTY) LTD</div>
+        <div style="color:rgba(255,255,255,0.45);font-size:11px;letter-spacing:0.08em;text-transform:uppercase;margin-top:2px;">In-Store Hygiene &amp; Compliance Audit Report</div>
+      </div>
+    </div>
+    <div style="border-top:1px solid rgba(255,255,255,0.1);padding-top:18px;">
+      <div style="color:#fff;font-size:22px;font-weight:800;margin-bottom:4px;">${storeName}</div>
+      ${storeAddr ? `<div style="color:rgba(255,255,255,0.5);font-size:12px;">${storeAddr}</div>` : ''}
+      <div style="color:rgba(255,255,255,0.4);font-size:12px;margin-top:2px;">${storeType} | Audit Date: ${fmtDate(dt)} | Auditor: ${repName}</div>
+    </div>
+  </div>
+
+  <!-- SCORE -->
+  <div style="background:${rbg};border-bottom:3px solid ${col};padding:22px 28px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+      <div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:${col};margin-bottom:4px;">Overall Compliance Score</div>
+        <div style="font-size:40px;font-weight:900;color:${col};line-height:1;">${pct}%</div>
+        <div style="font-size:12px;color:${col};margin-top:4px;">${passCount} of ${tot} requirements met</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="display:inline-block;background:${col};color:#fff;padding:6px 14px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.08em;">${rlbl}</div>
+        <div style="font-size:12px;color:${col};margin-top:8px;">${failCount} items require action</div>
+      </div>
+    </div>
+    <div style="margin-top:14px;height:6px;background:rgba(0,0,0,0.1);border-radius:3px;overflow:hidden;">
+      <div style="height:100%;width:${pct}%;background:${col};border-radius:3px;"></div>
+    </div>
+  </div>
+
+  <!-- INTRO -->
+  <div style="padding:26px 28px;border-bottom:1px solid #F3F4F6;">
+    <p style="font-size:14px;color:#374151;line-height:1.7;margin:0 0 14px 0;">Dear ${mgrName},</p>
+    <p style="font-size:13px;color:#374151;line-height:1.7;margin:0 0 14px 0;">
+      Thank you for allowing us to conduct an in-store hygiene and compliance walkthrough at <strong>${storeName}</strong> on <strong>${fmtDate(dt)}</strong>. This report summarises our findings against the key requirements of South African food safety legislation and internationally recognised food safety standards.
+    </p>
+    <p style="font-size:13px;color:#374151;line-height:1.7;margin:0 0 14px 0;">
+      The audit covered requirements under <strong>Government Gazette Regulation R638</strong> (General Hygiene Requirements for Food Premises, Foodstuffs, Cosmetics and Disinfectants Act 54 of 1972), the <strong>HACCP standard (SANS 10330:2007)</strong>, <strong>ISO 22000:2018</strong> and <strong>FSSC 22000 Version 6</strong>.
+    </p>
+    <p style="font-size:13px;color:#4A5568;line-height:1.7;margin:0;padding:14px 16px;background:#FEF3EC;border-left:4px solid #E8611A;border-radius:0 8px 8px 0;">
+      <strong>A note on compliance:</strong> The Certificate of Acceptability required to legally operate your food premises under R638 is granted — and can be withdrawn — by your local authority. The cost of compliance with the requirements in this report is always significantly less than the cost of a suspension, a product recall, or the liability that follows a food safety incident. We are here to help you close these gaps.
+    </p>
+  </div>
+
+  <!-- SECTION SCORES -->
+  <div style="padding:20px 28px;background:#F9FAFB;border-bottom:1px solid #E5E7EB;">
+    <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#9CA3AF;margin-bottom:14px;">Score by Section</div>
+    <table style="width:100%;border-collapse:collapse;">${secScores}</table>
+  </div>
+
+  <!-- FAILURES -->
+  <div style="padding:24px 28px 0;">
+    ${failCount > 0 ? `
+    <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#9CA3AF;margin-bottom:18px;">⚠️ Items Requiring Action (${failCount})</div>
+    ${failsHTML}` : `
+    <div style="background:#EAF7EF;border:1px solid #A8D5B5;border-radius:8px;padding:20px;text-align:center;margin-bottom:24px;">
+      <div style="font-size:24px;margin-bottom:8px;">🎉</div>
+      <div style="font-size:15px;font-weight:700;color:#1B7A3E;margin-bottom:4px;">All Checked Items Are Compliant</div>
+      <div style="font-size:12px;color:#4A7A5A;">Excellent compliance posture. Maintain current standards and keep records up to date.</div>
+    </div>`}
+  </div>
+
+  <!-- PASSES -->
+  <div style="padding:0 28px 24px;">${passesHTML}</div>
+
+  <!-- LEGISLATION -->
+  <div style="margin:0 28px 28px;border:1px solid #E5E7EB;border-radius:8px;overflow:hidden;">
+    <div style="background:#0F1F3D;padding:12px 16px;">
+      <div style="font-size:11px;font-weight:700;color:#fff;letter-spacing:0.05em;text-transform:uppercase;">Key South African Legislation &amp; Standards Referenced</div>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:12px;">
+      <tr style="border-bottom:1px solid #F3F4F6;"><td style="padding:9px 14px;width:35%;vertical-align:top;"><strong style="color:#0F1F3D;font-size:12px;">R638 (GN 638, 2018)</strong></td><td style="padding:9px 14px;color:#6B7280;line-height:1.55;">General Hygiene Requirements for Food Premises and Transport of Food, under the Foodstuffs, Cosmetics and Disinfectants Act 54 of 1972. Published by the Department of Health, 22 June 2018. This is the primary South African food premises law — compliance is mandatory for all food businesses.</td></tr>
+      <tr style="border-bottom:1px solid #F3F4F6;background:#FAFAFA;"><td style="padding:9px 14px;vertical-align:top;"><strong style="color:#0F1F3D;font-size:12px;">SANS 10330:2007</strong></td><td style="padding:9px 14px;color:#6B7280;line-height:1.55;">South African National Standard — Requirements for a Hazard Analysis and Critical Control Point (HACCP) system. Governs the development, implementation and maintenance of HACCP as a preventative food safety control system. The standard is built on 7 principles and 12 implementation stages.</td></tr>
+      <tr style="border-bottom:1px solid #F3F4F6;"><td style="padding:9px 14px;vertical-align:top;"><strong style="color:#0F1F3D;font-size:12px;">ISO 22000:2018</strong></td><td style="padding:9px 14px;color:#6B7280;line-height:1.55;">Food Safety Management Systems — International standard for any organisation in the food chain. Integrates HACCP principles with a comprehensive management system covering PRPs, traceability, emergency preparedness and continual improvement. The basis for FSSC 22000 certification.</td></tr>
+      <tr style="border-bottom:1px solid #F3F4F6;background:#FAFAFA;"><td style="padding:9px 14px;vertical-align:top;"><strong style="color:#0F1F3D;font-size:12px;">SANS 1828 / SANS 1853</strong></td><td style="padding:9px 14px;color:#6B7280;line-height:1.55;">SANS 1828: Certification for food-safe cleaning products (detergents). SANS 1853: Certification for disinfectants and sanitisers. All chemicals used on food contact surfaces in South African food premises must carry one or both certifications — these numbers must appear on the product label.</td></tr>
+      <tr style="border-bottom:1px solid #F3F4F6;"><td style="padding:9px 14px;vertical-align:top;"><strong style="color:#0F1F3D;font-size:12px;">OHSA (Act 85 of 1993)</strong></td><td style="padding:9px 14px;color:#6B7280;line-height:1.55;">Occupational Health and Safety Act. Governs employer responsibilities for workplace safety including provision of PPE, control of hazardous substances, SDS availability and safe working conditions. Applies to all employees including cleaning staff handling chemical products.</td></tr>
+      <tr><td style="padding:9px 14px;vertical-align:top;background:#FAFAFA;"><strong style="color:#0F1F3D;font-size:12px;">FSSC 22000 V6</strong></td><td style="padding:9px 14px;color:#6B7280;line-height:1.55;background:#FAFAFA;">Food Safety System Certification scheme recognised by the Global Food Safety Initiative (GFSI). Version 6 introduced enhanced requirements for allergen management (Clause 2.5.6), food safety culture, quality control and foreign body detection. Increasingly required as a condition of supply by major food retail chains.</td></tr>
+    </table>
+  </div>
+
+  <!-- CONTACT -->
+  <div style="margin:0 28px 28px;background:#0F1F3D;border-radius:8px;padding:20px 22px;">
+    <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:6px;">Ready to Close These Gaps?</div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.65);line-height:1.6;margin-bottom:14px;">Contact your Industroclean representative to discuss any of the findings in this report. We can provide products, training, hygiene files and compliance support to address every item identified above — in a single visit.</div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.9);line-height:1.8;">
+      <strong style="color:#E8611A;">Industroclean (Pty) Ltd</strong><br>
+      Corner Picaroon &amp; Raft Str, Laser Park, Honeydew, 2170<br>
+      Tel: (011) 801 4600 | Reg: 1973/001077/07
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div style="padding:16px 28px 24px;border-top:3px solid #E8611A;text-align:center;">
+    <div style="font-size:10px;color:#9CA3AF;line-height:1.6;">This report is provided as a complimentary compliance advisory service by Industroclean (Pty) Ltd. It does not constitute a formal legal opinion and does not replace engagement with the relevant local authority, Department of Health or a qualified food safety consultant. Report generated: ${fmtDate(dt)}.</div>
+  </div>
+
+</div>
+</body>
+</html>`;
+}
+
+// ═══════════════════════════════════════════
+// EMAIL SENDING via EmailJS
+// ═══════════════════════════════════════════
+async function sendReport() {
+  const toEmail = document.getElementById('e-to').value.trim();
+  const ccEmail = document.getElementById('e-cc').value.trim();
+  if (!toEmail) { toast('Please enter the store email address'); return; }
+
+  const storeName = document.getElementById('f-storeName').value || 'Store';
+  const mgrName   = document.getElementById('f-mgr').value || 'Store Manager';
+  const repName   = document.getElementById('f-rep').value || 'Your Industroclean Representative';
+  const dt        = document.getElementById('f-date').value;
+
+  const reportHTML = buildReport();
+
+  // Count findings
+  const answered = Object.values(answers);
+  const passCount = answered.filter(a => a.answer).length;
+  const failCount = answered.filter(a => !a.answer).length;
+  const tot = answered.length;
+  const pct = tot > 0 ? Math.round(passCount / tot * 100) : 0;
+  const rlbl = pct >= 85 ? 'LOW RISK' : pct >= 65 ? 'MODERATE RISK' : 'HIGH RISK';
+
+  // Show loading
+  document.getElementById('send-normal').style.display = 'none';
+  document.getElementById('send-loading').style.display = 'block';
+
+  try {
+    emailjs.init(EMAILJS_PUBLIC_KEY);
+
+    // Build a clean text summary for the email body (EmailJS auto-template)
+    // The full HTML report is sent as the html_content parameter
+    const templateParams = {
+      to_email:    toEmail,
+      to_name:     mgrName,
+      cc_email:    ccEmail,
+      from_name:   repName,
+      store_name:  storeName,
+      audit_date:  fmtDate(dt),
+      score_pct:   pct + '%',
+      risk_level:  rlbl,
+      pass_count:  passCount,
+      fail_count:  failCount,
+      total_count: tot,
+      html_report: reportHTML,
+      reply_to:    ccEmail || 'compliance@industroclean.co.za',
+      subject:     `Compliance Audit Report — ${storeName} — ${fmtDate(dt)}`
+    };
+
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams);
+
+    document.getElementById('send-loading').style.display = 'none';
+    const successEl = document.getElementById('send-success');
+    successEl.classList.add('show');
+    document.getElementById('send-success-msg').textContent =
+      `The compliance report has been sent to ${toEmail}${ccEmail ? ' (CC: ' + ccEmail + ')' : ''}. The store manager will receive a full, readable HTML report in their inbox.`;
+
+  } catch (err) {
+    console.error('EmailJS error:', err);
+    document.getElementById('send-loading').style.display = 'none';
+    document.getElementById('send-normal').style.display = 'block';
+    toast('Email failed — opening preview instead. Check EmailJS config.', 4000);
+    // Fallback: open in browser
+    setTimeout(() => {
+      const blob = new Blob([reportHTML], { type: 'text/html' });
+      window.open(URL.createObjectURL(blob), '_blank');
+    }, 500);
+  }
+}
+
+function previewReport() {
+  const reportHTML = buildReport();
+  const blob = new Blob([reportHTML], { type: 'text/html' });
+  window.open(URL.createObjectURL(blob), '_blank');
+}
+
+// ═══════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════
+function fmtDate(s) {
+  if (!s) return '';
+  try {
+    return new Date(s + 'T12:00:00').toLocaleDateString('en-ZA', { day:'numeric', month:'long', year:'numeric' });
+  } catch { return s; }
+}
+
+// Init
+document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+</script>
+</body>
+</html>
